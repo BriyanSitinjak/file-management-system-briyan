@@ -19,8 +19,8 @@ defineProps({
 })
 
 const variants = {
-  primary: 'bg-slate-900 text-white hover:bg-slate-800',
-  secondary: 'border border-slate-300 bg-white text-slate-800 hover:bg-slate-50',
+  primary: 'bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white',
+  secondary: 'border border-slate-300 bg-white text-slate-800 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700',
   danger: 'bg-red-600 text-white hover:bg-red-500',
 }
 </script>

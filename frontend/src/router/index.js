@@ -35,6 +35,18 @@ const router = createRouter({
       component: () => import('../views/DepartmentView.vue'),
       meta: { requiresAuth: true, requiresAdmin: true },
     },
+    {
+      path: '/activity',
+      name: 'activity',
+      component: () => import('../views/ActivityLogView.vue'),
+      meta: { requiresAuth: true, requiresAdmin: true },
+    },
+    {
+      path: '/trash',
+      name: 'trash',
+      component: () => import('../views/TrashView.vue'),
+      meta: { requiresAuth: true, requiresAdmin: true },
+    },
   ],
 })
 

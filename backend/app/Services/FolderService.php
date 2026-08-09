@@ -94,21 +94,37 @@ class FolderService
         $this->log($user, 'folder.deleted', $folder, "Deleted folder {$name}");
     }
 
+    public function restore(Folder $folder, User $user): Folder
+    {
+        $folder->restore();
+
+        $this->log($user, 'folder.restored', $folder, "Restored folder {$folder->name}");
+
+        return $folder->fresh(['department', 'user', 'parent']);
+    }
+
     /**
-     * @return list<array{id: int, name: string}>
+     * @return list<array{id: int|null, name: string}>
      */
     private function ancestors(Folder $folder): array
     {
-        $crumbs = [];
+        $crumbs = [
+            ['id' => null, 'name' => 'Root'],
+        ];
         $current = $folder->parent;
 
         while ($current !== null) {
-            array_unshift($crumbs, [
+            $crumbs[] = [
                 'id' => $current->id,
                 'name' => $current->name,
-            ]);
+            ];
             $current = $current->parent;
         }
+
+        $crumbs[] = [
+            'id' => $folder->id,
+            'name' => $folder->name,
+        ];
 
         return $crumbs;
     }

@@ -20,9 +20,9 @@ defineProps({
 </script>
 
 <template>
-  <div class="overflow-x-auto rounded border border-slate-200 bg-white">
+  <div class="overflow-x-auto rounded border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
     <table class="min-w-full text-left text-sm">
-      <thead class="bg-slate-50 text-slate-600">
+      <thead class="bg-slate-50 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
         <tr>
           <th
             v-for="column in columns"
@@ -43,12 +43,12 @@ defineProps({
         <tr
           v-for="(row, index) in rows"
           :key="row.id ?? index"
-          class="border-t border-slate-100"
+          class="border-t border-slate-100 dark:border-slate-800"
         >
           <td
             v-for="column in columns"
             :key="column.key"
-            class="px-3 py-2 text-slate-800"
+            class="px-3 py-2 text-slate-800 dark:text-slate-100"
           >
             <slot :name="`cell-${column.key}`" :row="row">
               {{ row[column.key] }}

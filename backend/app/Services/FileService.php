@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -106,21 +107,31 @@ class FileService
     }
 
     /**
-     * Soft-delete a file record and remove its binary for the given actor.
+     * Soft-delete a file record for the given actor.
      *
-     * Side effects: deletes the stored file from disk and writes an activity log entry.
+     * Side effects: keeps the binary on disk for restore and writes an activity log entry.
      */
     public function delete(File $file, User $user): void
     {
         $title = $file->title;
 
-        if ($file->path) {
-            Storage::delete($file->path);
-        }
-
         $file->delete();
 
         $this->log($user, 'file.deleted', $file, "Deleted file {$title}");
+    }
+
+    /**
+     * Restore a soft-deleted file for the given actor.
+     *
+     * Side effects: clears deleted_at and writes an activity log entry.
+     */
+    public function restore(File $file, User $user): File
+    {
+        $file->restore();
+
+        $this->log($user, 'file.restored', $file, "Restored file {$file->title}");
+
+        return $file->fresh(['department', 'folder', 'user']);
     }
 
     /**
@@ -135,6 +146,24 @@ class FileService
         $this->log($user, 'file.downloaded', $file, "Downloaded file {$file->title}");
 
         return Storage::download($file->path, $file->original_name ?? $file->title);
+    }
+
+    /**
+     * Stream the stored binary inline for in-browser preview.
+     *
+     * Side effects: writes an activity log entry for the preview action.
+     */
+    public function preview(File $file, User $user): Response
+    {
+        $this->log($user, 'file.previewed', $file, "Previewed file {$file->title}");
+
+        return Storage::response(
+            $file->path,
+            $file->original_name ?? $file->title,
+            [
+                'Content-Type' => $file->mime_type ?: 'application/octet-stream',
+            ],
+        );
     }
 
     /**

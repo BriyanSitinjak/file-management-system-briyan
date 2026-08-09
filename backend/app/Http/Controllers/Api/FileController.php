@@ -9,6 +9,7 @@ use App\Models\File;
 use App\Services\FileService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FileController extends Controller
@@ -59,5 +60,12 @@ class FileController extends Controller
         $this->authorize('view', $file);
 
         return $this->files->download($file, $request->user());
+    }
+
+    public function preview(Request $request, File $file): Response
+    {
+        $this->authorize('view', $file);
+
+        return $this->files->preview($file, $request->user());
     }
 }

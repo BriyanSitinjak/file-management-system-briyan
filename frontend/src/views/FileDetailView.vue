@@ -1,9 +1,9 @@
 <!--
-  File detail screen with metadata and download action.
-  Available to Administrator and Viewer; download is allowed for both roles.
+  File detail screen with metadata, download, and PDF/image preview.
+  Available to Administrator and Viewer; delete stays admin only.
 -->
 <script setup>
-import { onMounted, ref, watch } from 'vue'
+import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '../lib/api'
 import { useAuthStore } from '../stores/auth'
@@ -16,19 +16,51 @@ const router = useRouter()
 const loading = ref(true)
 const error = ref('')
 const file = ref(null)
+const previewUrl = ref('')
+const previewError = ref('')
+
+const isImage = computed(() => (file.value?.mime_type || '').startsWith('image/'))
+const isPdf = computed(() => file.value?.mime_type === 'application/pdf')
+const canPreview = computed(() => isImage.value || isPdf.value)
 
 // GET /files/{id} for the detail payload.
 async function loadFile() {
   loading.value = true
   error.value = ''
+  clearPreview()
 
   try {
     const { data } = await api.get(`/files/${route.params.id}`)
     file.value = data.file || data
+    if (canPreview.value) {
+      await loadPreview()
+    }
   } catch (err) {
     error.value = err.response?.data?.message || 'Failed to load file.'
   } finally {
     loading.value = false
+  }
+}
+
+// GET /files/{id}/preview as a blob and build an object URL for iframe/img.
+async function loadPreview() {
+  previewError.value = ''
+
+  try {
+    const response = await api.get(`/files/${route.params.id}/preview`, {
+      responseType: 'blob',
+    })
+    previewUrl.value = window.URL.createObjectURL(response.data)
+  } catch {
+    previewError.value = 'Preview is unavailable for this file.'
+  }
+}
+
+// Release the object URL when leaving the page or changing files.
+function clearPreview() {
+  if (previewUrl.value) {
+    window.URL.revokeObjectURL(previewUrl.value)
+    previewUrl.value = ''
   }
 }
 
@@ -59,14 +91,15 @@ watch(
 )
 
 onMounted(loadFile)
+onBeforeUnmount(clearPreview)
 </script>
 
 <template>
   <section class="space-y-5">
     <div class="flex flex-wrap items-start justify-between gap-3">
       <div>
-        <h1 class="text-2xl font-semibold">{{ file?.title || 'File detail' }}</h1>
-        <p class="text-sm text-slate-600">Metadata and download for this file.</p>
+        <h1 class="text-2xl font-semibold dark:text-slate-100">{{ file?.title || 'File detail' }}</h1>
+        <p class="text-sm text-slate-600 dark:text-slate-400">Metadata, preview, and download.</p>
       </div>
 
       <div class="flex flex-wrap gap-2">
@@ -86,34 +119,54 @@ onMounted(loadFile)
     <p v-if="loading" class="text-sm text-slate-500">Loading file…</p>
     <p v-else-if="error" class="text-sm text-red-600">{{ error }}</p>
 
-    <dl
-      v-else-if="file"
-      class="grid gap-4 rounded-lg border border-slate-200 bg-white p-4 sm:grid-cols-2"
-    >
-      <div>
-        <dt class="text-sm text-slate-500">Folder name</dt>
-        <dd class="font-medium">{{ file.folder?.name || '—' }}</dd>
+    <template v-else-if="file">
+      <dl class="grid gap-4 rounded-lg border border-slate-200 bg-white p-4 sm:grid-cols-2 dark:border-slate-700 dark:bg-slate-900">
+        <div>
+          <dt class="text-sm text-slate-500">Folder name</dt>
+          <dd class="font-medium dark:text-slate-100">{{ file.folder?.name || '—' }}</dd>
+        </div>
+        <div>
+          <dt class="text-sm text-slate-500">File name</dt>
+          <dd class="font-medium dark:text-slate-100">{{ file.original_name || '—' }}</dd>
+        </div>
+        <div>
+          <dt class="text-sm text-slate-500">Title</dt>
+          <dd class="font-medium dark:text-slate-100">{{ file.title }}</dd>
+        </div>
+        <div>
+          <dt class="text-sm text-slate-500">Department</dt>
+          <dd class="font-medium dark:text-slate-100">{{ file.department?.name || '—' }}</dd>
+        </div>
+        <div>
+          <dt class="text-sm text-slate-500">Uploaded by</dt>
+          <dd class="font-medium dark:text-slate-100">{{ file.user?.name || '—' }}</dd>
+        </div>
+        <div>
+          <dt class="text-sm text-slate-500">Upload date</dt>
+          <dd class="font-medium dark:text-slate-100">{{ new Date(file.created_at).toLocaleString() }}</dd>
+        </div>
+      </dl>
+
+      <!-- Preview only for image and PDF mime types. -->
+      <div
+        v-if="canPreview"
+        class="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900"
+      >
+        <h2 class="mb-3 text-lg font-medium dark:text-slate-100">Preview</h2>
+        <p v-if="previewError" class="text-sm text-red-600">{{ previewError }}</p>
+        <img
+          v-else-if="isImage && previewUrl"
+          :src="previewUrl"
+          :alt="file.title"
+          class="max-h-[32rem] w-full rounded object-contain"
+        />
+        <iframe
+          v-else-if="isPdf && previewUrl"
+          :src="previewUrl"
+          class="h-[32rem] w-full rounded border border-slate-200 dark:border-slate-700"
+          title="PDF preview"
+        />
       </div>
-      <div>
-        <dt class="text-sm text-slate-500">File name</dt>
-        <dd class="font-medium">{{ file.original_name || '—' }}</dd>
-      </div>
-      <div>
-        <dt class="text-sm text-slate-500">Title</dt>
-        <dd class="font-medium">{{ file.title }}</dd>
-      </div>
-      <div>
-        <dt class="text-sm text-slate-500">Department</dt>
-        <dd class="font-medium">{{ file.department?.name || '—' }}</dd>
-      </div>
-      <div>
-        <dt class="text-sm text-slate-500">Uploaded by</dt>
-        <dd class="font-medium">{{ file.user?.name || '—' }}</dd>
-      </div>
-      <div>
-        <dt class="text-sm text-slate-500">Upload date</dt>
-        <dd class="font-medium">{{ new Date(file.created_at).toLocaleString() }}</dd>
-      </div>
-    </dl>
+    </template>
   </section>
 </template>

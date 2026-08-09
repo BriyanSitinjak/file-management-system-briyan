@@ -6,9 +6,11 @@
 import { onMounted, ref } from 'vue'
 import { RotateCcw } from '@lucide/vue'
 import api from '../lib/api'
+import { useUiStore } from '../stores/ui'
 import BaseButton from '../components/BaseButton.vue'
 import DataTable from '../components/DataTable.vue'
 
+const ui = useUiStore()
 const loading = ref(true)
 const error = ref('')
 const folders = ref([])
@@ -54,14 +56,24 @@ async function loadTrash() {
 
 // POST /trash/folders/{id}/restore to undelete a folder.
 async function restoreFolder(folder) {
-  await api.post(`/trash/folders/${folder.id}/restore`)
-  await loadTrash()
+  try {
+    await api.post(`/trash/folders/${folder.id}/restore`)
+    await loadTrash()
+    ui.notifySuccess('Folder restored', `"${folder.name}" is available again.`)
+  } catch (err) {
+    ui.notifyError('Could not restore folder', err.response?.data?.message || 'Please try again.')
+  }
 }
 
 // POST /trash/files/{id}/restore to undelete a file.
 async function restoreFile(file) {
-  await api.post(`/trash/files/${file.id}/restore`)
-  await loadTrash()
+  try {
+    await api.post(`/trash/files/${file.id}/restore`)
+    await loadTrash()
+    ui.notifySuccess('File restored', `"${file.title}" is available again.`)
+  } catch (err) {
+    ui.notifyError('Could not restore file', err.response?.data?.message || 'Please try again.')
+  }
 }
 
 onMounted(loadTrash)

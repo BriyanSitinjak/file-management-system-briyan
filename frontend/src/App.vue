@@ -3,6 +3,8 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { AnimatePresence, motion } from 'motion-v'
 import AppLayout from './layouts/AppLayout.vue'
+import FeedbackModal from './components/FeedbackModal.vue'
+import ToastStack from './components/ToastStack.vue'
 import { fadeUp, transitions } from './lib/motion'
 
 const route = useRoute()
@@ -39,4 +41,7 @@ const showLayout = computed(() => !route.meta.guest)
       </motion.div>
     </AnimatePresence>
   </RouterView>
+
+  <FeedbackModal />
+  <ToastStack />
 </template>

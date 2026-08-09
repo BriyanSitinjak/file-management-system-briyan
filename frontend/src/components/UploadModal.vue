@@ -109,23 +109,23 @@ watch(
 
 <template>
   <BaseModal :open="open" title="Upload file" @close="emit('close')">
-    <form class="space-y-4" @submit.prevent="submitUpload">
-      <label class="block space-y-1 text-sm">
+    <form class="space-y-5" @submit.prevent="submitUpload">
+      <label class="field-group">
         <span>Title</span>
         <input
           v-model="title"
           type="text"
           required
-          class="w-full rounded border border-slate-300 px-3 py-2"
+          class="field-input"
         />
       </label>
 
-      <label class="block space-y-1 text-sm">
+      <label class="field-group">
         <span>Department</span>
         <select
           v-model="departmentId"
           required
-          class="w-full rounded border border-slate-300 px-3 py-2"
+          class="field-input"
         >
           <option disabled value="">Select department</option>
           <option
@@ -139,18 +139,22 @@ watch(
       </label>
 
       <div
-        class="rounded border border-dashed px-4 py-8 text-center text-sm"
-        :class="dragging ? 'border-slate-900 bg-slate-50' : 'border-slate-300'"
+        class="rounded-xl border border-dashed px-4 py-8 text-center text-sm"
+        :class="
+          dragging
+            ? 'border-[var(--brand)] bg-[var(--brand-soft)]'
+            : 'border-[var(--line)] bg-[var(--canvas)]'
+        "
         @dragover="onDragOver"
         @dragleave="onDragLeave"
         @drop="onDrop"
       >
-        <Upload class="mx-auto mb-2 size-8 text-slate-400" :stroke-width="1.75" />
-        <p class="mb-2 text-slate-600">
+        <Upload class="mx-auto mb-2 size-8 text-[var(--muted)]" :stroke-width="1.75" />
+        <p class="mb-3 text-[var(--muted)]">
           Drag and drop a file here, or choose one below.
         </p>
         <input type="file" @change="onFileChange" />
-        <p v-if="file" class="mt-2 text-slate-800">Selected: {{ file.name }}</p>
+        <p v-if="file" class="mt-3 font-medium text-[var(--ink)]">Selected: {{ file.name }}</p>
       </div>
 
       <p v-if="error" class="text-sm text-red-600">{{ error }}</p>

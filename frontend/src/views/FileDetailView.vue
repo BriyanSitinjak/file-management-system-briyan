@@ -8,9 +8,11 @@ import { useRoute, useRouter } from 'vue-router'
 import { Download, Eye, Trash2 } from '@lucide/vue'
 import api from '../lib/api'
 import { useAuthStore } from '../stores/auth'
+import { useUiStore } from '../stores/ui'
 import BaseButton from '../components/BaseButton.vue'
 
 const auth = useAuthStore()
+const ui = useUiStore()
 const route = useRoute()
 const router = useRouter()
 
@@ -81,9 +83,21 @@ async function downloadFile() {
 
 // DELETE /files/{id} then return to the parent folder.
 async function deleteFile() {
-  if (!confirm(`Delete file "${file.value?.title}"?`)) return
-  await api.delete(`/files/${route.params.id}`)
-  await router.push(file.value?.folder_id ? `/folders/${file.value.folder_id}` : '/folders')
+  const title = file.value?.title || 'this file'
+  const confirmed = await ui.confirm({
+    title: 'Delete file?',
+    message: `"${title}" will be moved to trash.`,
+    confirmLabel: 'Delete',
+  })
+  if (!confirmed) return
+
+  try {
+    await api.delete(`/files/${route.params.id}`)
+    ui.notifySuccess('File deleted', `"${title}" was moved to trash.`)
+    await router.push(file.value?.folder_id ? `/folders/${file.value.folder_id}` : '/folders')
+  } catch (err) {
+    ui.notifyError('Could not delete file', err.response?.data?.message || 'Please try again.')
+  }
 }
 
 watch(

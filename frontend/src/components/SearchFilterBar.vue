@@ -61,8 +61,8 @@ loadDepartments()
     class="surface-card flex flex-wrap items-end gap-3 p-3"
     @submit.prevent="applyFilters"
   >
-    <label class="min-w-48 flex-1 space-y-1 text-sm">
-      <span class="text-[var(--muted)]">Document name</span>
+    <label class="field-group min-w-48 flex-1">
+      <span>Document name</span>
       <div class="relative">
         <Search class="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[var(--muted)]" :stroke-width="2" />
         <input
@@ -74,8 +74,8 @@ loadDepartments()
       </div>
     </label>
 
-    <label class="min-w-40 space-y-1 text-sm">
-      <span class="text-[var(--muted)]">Department</span>
+    <label class="field-group min-w-40">
+      <span>Department</span>
       <select v-model="local.department_id" class="field-input">
         <option value="">All departments</option>
         <option

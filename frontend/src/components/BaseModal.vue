@@ -46,15 +46,15 @@ function onBackdropClick() {
           :exit="scaleIn.exit"
           :transition="transitions.soft"
         >
-          <div class="mb-4 flex items-center justify-between gap-3">
+          <div class="mb-6 flex items-center justify-between gap-3">
             <h2 class="text-lg font-bold tracking-tight text-[var(--ink)]">{{ title }}</h2>
             <button
               type="button"
-              class="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-sm text-[var(--muted)] hover:bg-[var(--canvas)]"
+              class="inline-flex rounded-lg p-1 text-[var(--muted)] hover:bg-[var(--canvas)]"
+              aria-label="Close"
               @click="emit('close')"
             >
               <X class="size-4" :stroke-width="2" />
-              Close
             </button>
           </div>
           <slot />

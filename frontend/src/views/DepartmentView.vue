@@ -6,10 +6,12 @@
 import { onMounted, ref } from 'vue'
 import { Check, Pencil, Plus, Trash2, X } from '@lucide/vue'
 import api from '../lib/api'
+import { useUiStore } from '../stores/ui'
 import BaseButton from '../components/BaseButton.vue'
 import BaseModal from '../components/BaseModal.vue'
 import DataTable from '../components/DataTable.vue'
 
+const ui = useUiStore()
 const loading = ref(true)
 const error = ref('')
 const departments = ref([])
@@ -59,23 +61,47 @@ function openEdit(department) {
 async function saveDepartment() {
   if (!name.value.trim()) return
 
-  if (editing.value) {
-    await api.put(`/departments/${editing.value.id}`, { name: name.value.trim() })
-  } else {
-    await api.post('/departments', { name: name.value.trim() })
-  }
+  const isEdit = Boolean(editing.value)
 
-  showModal.value = false
-  editing.value = null
-  name.value = ''
-  await loadDepartments()
+  try {
+    if (isEdit) {
+      await api.put(`/departments/${editing.value.id}`, { name: name.value.trim() })
+    } else {
+      await api.post('/departments', { name: name.value.trim() })
+    }
+
+    showModal.value = false
+    editing.value = null
+    name.value = ''
+    await loadDepartments()
+    ui.notifySuccess(
+      isEdit ? 'Department updated' : 'Department created',
+      isEdit ? 'Changes were saved successfully.' : 'The department is ready to use.',
+    )
+  } catch (err) {
+    ui.notifyError(
+      isEdit ? 'Could not update department' : 'Could not create department',
+      err.response?.data?.message || 'Please try again.',
+    )
+  }
 }
 
 // DELETE /departments/{id} after confirmation.
 async function deleteDepartment(department) {
-  if (!confirm(`Delete department "${department.name}"?`)) return
-  await api.delete(`/departments/${department.id}`)
-  await loadDepartments()
+  const confirmed = await ui.confirm({
+    title: 'Delete department?',
+    message: `"${department.name}" will be permanently removed.`,
+    confirmLabel: 'Delete',
+  })
+  if (!confirmed) return
+
+  try {
+    await api.delete(`/departments/${department.id}`)
+    await loadDepartments()
+    ui.notifySuccess('Department deleted', `"${department.name}" was removed.`)
+  } catch (err) {
+    ui.notifyError('Could not delete department', err.response?.data?.message || 'Please try again.')
+  }
 }
 
 onMounted(loadDepartments)
@@ -114,14 +140,14 @@ onMounted(loadDepartments)
       :title="editing ? 'Edit department' : 'Create department'"
       @close="showModal = false"
     >
-      <form class="space-y-4" @submit.prevent="saveDepartment">
-        <label class="block space-y-1 text-sm">
+      <form class="space-y-5" @submit.prevent="saveDepartment">
+        <label class="field-group">
           <span>Name</span>
           <input
             v-model="name"
             type="text"
             required
-            class="w-full rounded border border-slate-300 px-3 py-2"
+            class="field-input"
           />
         </label>
         <div class="flex justify-end gap-2">

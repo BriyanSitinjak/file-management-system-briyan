@@ -8,21 +8,20 @@ import { useRoute } from 'vue-router'
 import {
   Check,
   FolderPlus,
-  LayoutGrid,
-  List,
   Upload,
   X,
 } from '@lucide/vue'
 import api from '../lib/api'
 import { useAuthStore } from '../stores/auth'
+import { useUiStore } from '../stores/ui'
 import BaseButton from '../components/BaseButton.vue'
 import BaseModal from '../components/BaseModal.vue'
-import DataTable from '../components/DataTable.vue'
 import FolderCard from '../components/FolderCard.vue'
 import SearchFilterBar from '../components/SearchFilterBar.vue'
 import UploadModal from '../components/UploadModal.vue'
 
 const auth = useAuthStore()
+const ui = useUiStore()
 const route = useRoute()
 
 const loading = ref(false)
@@ -32,7 +31,6 @@ const breadcrumbs = ref([])
 const childFolders = ref([])
 const files = ref([])
 const filters = ref({ q: '', department_id: '' })
-const viewMode = ref('grid')
 
 const showCreateFolder = ref(false)
 const showRenameFolder = ref(false)
@@ -44,13 +42,6 @@ const departments = ref([])
 
 const folderId = computed(() => route.params.id || null)
 const isRoot = computed(() => !folderId.value)
-
-const fileColumns = [
-  { key: 'title', label: 'Title' },
-  { key: 'department', label: 'Department' },
-  { key: 'user', label: 'Uploaded by' },
-  { key: 'created_at', label: 'Uploaded' },
-]
 
 // GET /departments for the create-folder department select.
 async function loadDepartments() {
@@ -128,15 +119,20 @@ function onSearch(nextFilters) {
 async function createFolder() {
   if (!folderName.value.trim()) return
 
-  await api.post('/folders', {
-    name: folderName.value.trim(),
-    department_id: Number(createDepartmentId.value || folder.value?.department_id),
-    parent_id: folderId.value ? Number(folderId.value) : null,
-  })
+  try {
+    await api.post('/folders', {
+      name: folderName.value.trim(),
+      department_id: Number(createDepartmentId.value || folder.value?.department_id),
+      parent_id: folderId.value ? Number(folderId.value) : null,
+    })
 
-  folderName.value = ''
-  showCreateFolder.value = false
-  await loadFolderContents()
+    folderName.value = ''
+    showCreateFolder.value = false
+    await loadFolderContents()
+    ui.notifySuccess('Folder created', 'The new folder is ready to use.')
+  } catch (err) {
+    ui.notifyError('Could not create folder', err.response?.data?.message || 'Please try again.')
+  }
 }
 
 function openRename(target) {
@@ -148,26 +144,58 @@ function openRename(target) {
 async function renameFolder() {
   if (!renameTarget.value || !folderName.value.trim()) return
 
-  await api.put(`/folders/${renameTarget.value.id}`, {
-    name: folderName.value.trim(),
-  })
+  try {
+    await api.put(`/folders/${renameTarget.value.id}`, {
+      name: folderName.value.trim(),
+    })
 
-  showRenameFolder.value = false
-  renameTarget.value = null
-  folderName.value = ''
-  await loadFolderContents()
+    showRenameFolder.value = false
+    renameTarget.value = null
+    folderName.value = ''
+    await loadFolderContents()
+    ui.notifySuccess('Folder updated', 'The folder name was saved.')
+  } catch (err) {
+    ui.notifyError('Could not update folder', err.response?.data?.message || 'Please try again.')
+  }
 }
 
 async function deleteFolder(target) {
-  if (!confirm(`Delete folder "${target.name}"?`)) return
-  await api.delete(`/folders/${target.id}`)
-  await loadFolderContents()
+  const confirmed = await ui.confirm({
+    title: 'Delete folder?',
+    message: `"${target.name}" will be moved to trash.`,
+    confirmLabel: 'Delete',
+  })
+  if (!confirmed) return
+
+  try {
+    await api.delete(`/folders/${target.id}`)
+    await loadFolderContents()
+    ui.notifySuccess('Folder deleted', `"${target.name}" was moved to trash.`)
+  } catch (err) {
+    ui.notifyError('Could not delete folder', err.response?.data?.message || 'Please try again.')
+  }
 }
 
 async function deleteFile(target) {
-  if (!confirm(`Delete file "${target.title}"?`)) return
-  await api.delete(`/files/${target.id}`)
-  await loadFolderContents()
+  const confirmed = await ui.confirm({
+    title: 'Delete file?',
+    message: `"${target.title}" will be moved to trash.`,
+    confirmLabel: 'Delete',
+  })
+  if (!confirmed) return
+
+  try {
+    await api.delete(`/files/${target.id}`)
+    await loadFolderContents()
+    ui.notifySuccess('File deleted', `"${target.title}" was moved to trash.`)
+  } catch (err) {
+    ui.notifyError('Could not delete file', err.response?.data?.message || 'Please try again.')
+  }
+}
+
+function onUploaded() {
+  loadFolderContents()
+  ui.notifySuccess('File uploaded', 'The file was saved successfully.')
 }
 
 watch(
@@ -214,25 +242,6 @@ loadDepartments()
             Add New File
           </BaseButton>
         </template>
-
-        <div class="inline-flex rounded-xl border border-[var(--line)] bg-[var(--panel)] p-1">
-          <button
-            type="button"
-            class="rounded-lg p-1.5"
-            :class="viewMode === 'list' ? 'bg-[var(--brand-soft)] text-[var(--brand-strong)]' : 'text-[var(--muted)]'"
-            @click="viewMode = 'list'"
-          >
-            <List class="size-4" :stroke-width="2" />
-          </button>
-          <button
-            type="button"
-            class="rounded-lg p-1.5"
-            :class="viewMode === 'grid' ? 'bg-[var(--brand-soft)] text-[var(--brand-strong)]' : 'text-[var(--muted)]'"
-            @click="viewMode = 'grid'"
-          >
-            <LayoutGrid class="size-4" :stroke-width="2" />
-          </button>
-        </div>
       </div>
     </div>
 
@@ -242,9 +251,9 @@ loadDepartments()
     <p v-else-if="error" class="text-sm text-rose-600">{{ error }}</p>
 
     <template v-else>
-      <div v-if="viewMode === 'grid'" class="space-y-6">
+      <div class="space-y-6">
         <div>
-          <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">
+          <h2 class="mb-4 text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">
             Folders
           </h2>
           <div
@@ -267,7 +276,7 @@ loadDepartments()
         </div>
 
         <div v-if="!isRoot">
-          <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">
+          <h2 class="mb-4 text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">
             Files
           </h2>
           <div
@@ -288,51 +297,15 @@ loadDepartments()
           </div>
         </div>
       </div>
-
-      <div v-else class="space-y-4">
-        <DataTable
-          :columns="[
-            { key: 'name', label: 'Name' },
-            { key: 'type', label: 'Type' },
-            { key: 'department', label: 'Department' },
-            { key: 'updated', label: 'Modified' },
-          ]"
-          :rows="[
-            ...childFolders.map((item) => ({
-              id: `folder-${item.id}`,
-              name: item.name,
-              type: 'Folder',
-              department: item.department?.name || '—',
-              updated: new Date(item.updated_at || item.created_at).toLocaleDateString(),
-              href: `/folders/${item.id}`,
-            })),
-            ...files.map((item) => ({
-              id: `file-${item.id}`,
-              name: item.title,
-              type: 'File',
-              department: item.department || '—',
-              updated: new Date(item.updated_at || item.created_at).toLocaleDateString(),
-              href: `/files/${item.id}`,
-            })),
-          ]"
-          empty-text="No documents found."
-        >
-          <template #cell-name="{ row }">
-            <RouterLink class="font-semibold text-[var(--brand-strong)] hover:underline" :to="row.href">
-              {{ row.name }}
-            </RouterLink>
-          </template>
-        </DataTable>
-      </div>
     </template>
 
     <BaseModal :open="showCreateFolder" title="Create folder" @close="showCreateFolder = false">
-      <form class="space-y-4" @submit.prevent="createFolder">
-        <label class="block space-y-1 text-sm">
+      <form class="space-y-5" @submit.prevent="createFolder">
+        <label class="field-group">
           <span>Name</span>
           <input v-model="folderName" type="text" required class="field-input" />
         </label>
-        <label v-if="isRoot" class="block space-y-1 text-sm">
+        <label v-if="isRoot" class="field-group">
           <span>Department</span>
           <select v-model="createDepartmentId" required class="field-input">
             <option
@@ -354,8 +327,8 @@ loadDepartments()
     </BaseModal>
 
     <BaseModal :open="showRenameFolder" title="Rename folder" @close="showRenameFolder = false">
-      <form class="space-y-4" @submit.prevent="renameFolder">
-        <label class="block space-y-1 text-sm">
+      <form class="space-y-5" @submit.prevent="renameFolder">
+        <label class="field-group">
           <span>Name</span>
           <input v-model="folderName" type="text" required class="field-input" />
         </label>
@@ -373,7 +346,7 @@ loadDepartments()
       :folder-id="folderId"
       :department-id="folder?.department_id"
       @close="showUpload = false"
-      @uploaded="loadFolderContents"
+      @uploaded="onUploaded"
     />
   </section>
 </template>

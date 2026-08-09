@@ -91,6 +91,18 @@ a {
   color: var(--muted);
 }
 
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.field-group > span:first-child {
+  font-weight: 500;
+  color: var(--muted);
+}
+
 .field-input {
   width: 100%;
   border: 1px solid var(--line);

@@ -35,10 +35,8 @@ async function onSubmit() {
 </script>
 
 <template>
-  <div class="relative flex min-h-screen items-center justify-center px-4 py-10">
-    <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_#d8f3ee,_transparent_40%),radial-gradient(circle_at_bottom_right,_#e8eef7,_transparent_45%)]" />
-
-    <MotionFade class="relative w-full max-w-md">
+  <div class="flex min-h-screen items-center justify-center bg-[var(--canvas)] px-4 py-10">
+    <MotionFade class="w-full max-w-md">
       <p class="mb-3 text-sm font-bold tracking-tight text-[var(--brand)]">
         File management hub
       </p>
@@ -48,14 +46,14 @@ async function onSubmit() {
       </h1>
       <p class="page-subtitle mb-6">Sign in with a demo account to continue.</p>
 
-      <form class="surface-card space-y-4 p-5" @submit.prevent="onSubmit">
-        <label class="block space-y-1 text-sm">
-          <span class="text-[var(--muted)]">Email</span>
+      <form class="surface-card space-y-5 p-5" @submit.prevent="onSubmit">
+        <label class="field-group">
+          <span>Email</span>
           <input v-model="email" type="email" required class="field-input" />
         </label>
 
-        <label class="block space-y-1 text-sm">
-          <span class="text-[var(--muted)]">Password</span>
+        <label class="field-group">
+          <span>Password</span>
           <input v-model="password" type="password" required class="field-input" />
         </label>
 

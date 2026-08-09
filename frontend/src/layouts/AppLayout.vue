@@ -50,8 +50,16 @@ const pageTitle = computed(() => {
   return titles[route.name] || 'File Management'
 })
 
-// Call auth.logout which POSTs /logout, then return to the login screen.
+// Confirm, then POST /logout and return to the login screen.
 async function onLogout() {
+  const confirmed = await ui.confirm({
+    title: 'Log out?',
+    message: 'You will need to sign in again to continue.',
+    confirmLabel: 'Logout',
+  })
+  if (!confirmed) return
+
+  ui.closeMobileNav()
   await auth.logout()
   await router.replace('/login')
 }
@@ -161,7 +169,7 @@ function onGlobalSearch(event) {
             />
           </div>
 
-          <div class="mt-4">
+          <div class="mt-5">
             <h1 class="page-title">{{ pageTitle }}</h1>
           </div>
         </header>

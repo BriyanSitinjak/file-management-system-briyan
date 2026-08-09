@@ -5,6 +5,16 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import {
+  Check,
+  ExternalLink,
+  FolderPlus,
+  Folder as FolderIcon,
+  Pencil,
+  Trash2,
+  Upload,
+  X,
+} from '@lucide/vue'
 import api from '../lib/api'
 import { useAuthStore } from '../stores/auth'
 import BaseButton from '../components/BaseButton.vue'
@@ -204,11 +214,14 @@ loadDepartments()
 
       <!-- Admin only: mutation actions stay hidden for Viewers. -->
       <div v-if="auth.isAdmin" class="flex flex-wrap gap-2">
-        <BaseButton @click="showCreateFolder = true">Create folder</BaseButton>
+        <BaseButton :icon="FolderPlus" @click="showCreateFolder = true">
+          Create folder
+        </BaseButton>
         <!-- Upload needs a concrete folder id, so hide it on the root listing. -->
         <BaseButton
           v-if="!isRoot"
           variant="secondary"
+          :icon="Upload"
           @click="showUpload = true"
         >
           Upload file
@@ -233,13 +246,18 @@ loadDepartments()
             :key="child.id"
             class="flex flex-wrap items-center justify-between gap-3 px-3 py-2"
           >
-            <RouterLink class="font-medium underline" :to="`/folders/${child.id}`">
+            <RouterLink class="inline-flex items-center gap-2 font-medium underline" :to="`/folders/${child.id}`">
+              <FolderIcon class="size-4 shrink-0" :stroke-width="2" />
               {{ child.name }}
             </RouterLink>
             <!-- Admin only: rename and delete for folders. -->
             <div v-if="auth.isAdmin" class="flex gap-2">
-              <BaseButton variant="secondary" @click="openRename(child)">Rename</BaseButton>
-              <BaseButton variant="danger" @click="deleteFolder(child)">Delete</BaseButton>
+              <BaseButton variant="secondary" :icon="Pencil" @click="openRename(child)">
+                Rename
+              </BaseButton>
+              <BaseButton variant="danger" :icon="Trash2" @click="deleteFolder(child)">
+                Delete
+              </BaseButton>
             </div>
           </li>
         </ul>
@@ -253,13 +271,18 @@ loadDepartments()
           </template>
           <template #cell-actions="{ row }">
             <div class="flex gap-2">
-              <BaseButton variant="secondary" @click="router.push(`/files/${row.id}`)">
+              <BaseButton
+                variant="secondary"
+                :icon="ExternalLink"
+                @click="router.push(`/files/${row.id}`)"
+              >
                 Open
               </BaseButton>
               <!-- Admin only: file delete from the folder listing. -->
               <BaseButton
                 v-if="auth.isAdmin"
                 variant="danger"
+                :icon="Trash2"
                 @click="deleteFile(row)"
               >
                 Delete
@@ -299,8 +322,10 @@ loadDepartments()
           </select>
         </label>
         <div class="flex justify-end gap-2">
-          <BaseButton variant="secondary" @click="showCreateFolder = false">Cancel</BaseButton>
-          <BaseButton type="submit">Create</BaseButton>
+          <BaseButton variant="secondary" :icon="X" @click="showCreateFolder = false">
+            Cancel
+          </BaseButton>
+          <BaseButton type="submit" :icon="FolderPlus">Create</BaseButton>
         </div>
       </form>
     </BaseModal>
@@ -317,8 +342,10 @@ loadDepartments()
           />
         </label>
         <div class="flex justify-end gap-2">
-          <BaseButton variant="secondary" @click="showRenameFolder = false">Cancel</BaseButton>
-          <BaseButton type="submit">Save</BaseButton>
+          <BaseButton variant="secondary" :icon="X" @click="showRenameFolder = false">
+            Cancel
+          </BaseButton>
+          <BaseButton type="submit" :icon="Check">Save</BaseButton>
         </div>
       </form>
     </BaseModal>

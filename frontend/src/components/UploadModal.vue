@@ -4,6 +4,7 @@
 -->
 <script setup>
 import { ref, watch } from 'vue'
+import { Upload, X } from '@lucide/vue'
 import api from '../lib/api'
 import BaseModal from './BaseModal.vue'
 import BaseButton from './BaseButton.vue'
@@ -144,6 +145,7 @@ watch(
         @dragleave="onDragLeave"
         @drop="onDrop"
       >
+        <Upload class="mx-auto mb-2 size-8 text-slate-400" :stroke-width="1.75" />
         <p class="mb-2 text-slate-600">
           Drag and drop a file here, or choose one below.
         </p>
@@ -154,8 +156,8 @@ watch(
       <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
 
       <div class="flex justify-end gap-2">
-        <BaseButton variant="secondary" @click="emit('close')">Cancel</BaseButton>
-        <BaseButton type="submit" :disabled="loading">
+        <BaseButton variant="secondary" :icon="X" @click="emit('close')">Cancel</BaseButton>
+        <BaseButton type="submit" :icon="Upload" :disabled="loading">
           {{ loading ? 'Uploading…' : 'Upload' }}
         </BaseButton>
       </div>

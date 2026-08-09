@@ -4,6 +4,7 @@
 -->
 <script setup>
 import { onMounted, ref } from 'vue'
+import { Check, Pencil, Plus, Trash2, X } from '@lucide/vue'
 import api from '../lib/api'
 import BaseButton from '../components/BaseButton.vue'
 import BaseModal from '../components/BaseModal.vue'
@@ -87,7 +88,7 @@ onMounted(loadDepartments)
         <h1 class="text-2xl font-semibold">Departments</h1>
         <p class="text-sm text-slate-600">Create, rename, and remove departments.</p>
       </div>
-      <BaseButton @click="openCreate">Create department</BaseButton>
+      <BaseButton :icon="Plus" @click="openCreate">Create department</BaseButton>
     </div>
 
     <p v-if="loading" class="text-sm text-slate-500">Loading departments…</p>
@@ -101,8 +102,10 @@ onMounted(loadDepartments)
     >
       <template #cell-actions="{ row }">
         <div class="flex gap-2">
-          <BaseButton variant="secondary" @click="openEdit(row)">Edit</BaseButton>
-          <BaseButton variant="danger" @click="deleteDepartment(row)">Delete</BaseButton>
+          <BaseButton variant="secondary" :icon="Pencil" @click="openEdit(row)">Edit</BaseButton>
+          <BaseButton variant="danger" :icon="Trash2" @click="deleteDepartment(row)">
+            Delete
+          </BaseButton>
         </div>
       </template>
     </DataTable>
@@ -123,8 +126,8 @@ onMounted(loadDepartments)
           />
         </label>
         <div class="flex justify-end gap-2">
-          <BaseButton variant="secondary" @click="showModal = false">Cancel</BaseButton>
-          <BaseButton type="submit">Save</BaseButton>
+          <BaseButton variant="secondary" :icon="X" @click="showModal = false">Cancel</BaseButton>
+          <BaseButton type="submit" :icon="Check">Save</BaseButton>
         </div>
       </form>
     </BaseModal>

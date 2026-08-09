@@ -4,6 +4,7 @@
 -->
 <script setup>
 import { onMounted, ref } from 'vue'
+import { RotateCcw } from '@lucide/vue'
 import api from '../lib/api'
 import BaseButton from '../components/BaseButton.vue'
 import DataTable from '../components/DataTable.vue'
@@ -83,7 +84,9 @@ onMounted(loadTrash)
         <h2 class="text-lg font-medium dark:text-slate-100">Folders</h2>
         <DataTable :columns="folderColumns" :rows="folders" empty-text="No deleted folders.">
           <template #cell-actions="{ row }">
-            <BaseButton variant="secondary" @click="restoreFolder(row)">Restore</BaseButton>
+            <BaseButton variant="secondary" :icon="RotateCcw" @click="restoreFolder(row)">
+              Restore
+            </BaseButton>
           </template>
         </DataTable>
       </div>
@@ -92,7 +95,9 @@ onMounted(loadTrash)
         <h2 class="text-lg font-medium dark:text-slate-100">Files</h2>
         <DataTable :columns="fileColumns" :rows="files" empty-text="No deleted files.">
           <template #cell-actions="{ row }">
-            <BaseButton variant="secondary" @click="restoreFile(row)">Restore</BaseButton>
+            <BaseButton variant="secondary" :icon="RotateCcw" @click="restoreFile(row)">
+              Restore
+            </BaseButton>
           </template>
         </DataTable>
       </div>

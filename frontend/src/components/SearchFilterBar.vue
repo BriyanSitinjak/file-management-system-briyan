@@ -4,7 +4,9 @@
 -->
 <script setup>
 import { ref, watch } from 'vue'
+import { Eraser, Search } from '@lucide/vue'
 import api from '../lib/api'
+import BaseButton from './BaseButton.vue'
 
 const props = defineProps({
   modelValue: {
@@ -65,7 +67,7 @@ loadDepartments()
         v-model="local.q"
         type="search"
         placeholder="Name or title"
-        class="w-full rounded border border-slate-300 px-3 py-2"
+        class="w-full rounded border border-slate-300 px-3 py-2 dark:border-slate-600 dark:bg-slate-900"
       />
     </label>
 
@@ -73,7 +75,7 @@ loadDepartments()
       <span>Department</span>
       <select
         v-model="local.department_id"
-        class="w-full rounded border border-slate-300 px-3 py-2"
+        class="w-full rounded border border-slate-300 px-3 py-2 dark:border-slate-600 dark:bg-slate-900"
       >
         <option value="">All departments</option>
         <option
@@ -86,15 +88,9 @@ loadDepartments()
       </select>
     </label>
 
-    <button type="submit" class="rounded bg-slate-900 px-3 py-2 text-sm text-white">
-      Apply
-    </button>
-    <button
-      type="button"
-      class="rounded border border-slate-300 px-3 py-2 text-sm"
-      @click="clearFilters"
-    >
+    <BaseButton type="submit" :icon="Search">Apply</BaseButton>
+    <BaseButton type="button" variant="secondary" :icon="Eraser" @click="clearFilters">
       Clear
-    </button>
+    </BaseButton>
   </form>
 </template>

@@ -5,6 +5,7 @@
 <script setup>
 import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { Download, Eye, Trash2 } from '@lucide/vue'
 import api from '../lib/api'
 import { useAuthStore } from '../stores/auth'
 import BaseButton from '../components/BaseButton.vue'
@@ -103,11 +104,14 @@ onBeforeUnmount(clearPreview)
       </div>
 
       <div class="flex flex-wrap gap-2">
-        <BaseButton :disabled="!file" @click="downloadFile">Download</BaseButton>
+        <BaseButton :icon="Download" :disabled="!file" @click="downloadFile">
+          Download
+        </BaseButton>
         <!-- Admin only: destructive delete stays hidden for Viewers. -->
         <BaseButton
           v-if="auth.isAdmin"
           variant="danger"
+          :icon="Trash2"
           :disabled="!file"
           @click="deleteFile"
         >
@@ -152,7 +156,10 @@ onBeforeUnmount(clearPreview)
         v-if="canPreview"
         class="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900"
       >
-        <h2 class="mb-3 text-lg font-medium dark:text-slate-100">Preview</h2>
+        <h2 class="mb-3 flex items-center gap-2 text-lg font-medium dark:text-slate-100">
+          <Eye class="size-5" :stroke-width="2" />
+          Preview
+        </h2>
         <p v-if="previewError" class="text-sm text-red-600">{{ previewError }}</p>
         <img
           v-else-if="isImage && previewUrl"

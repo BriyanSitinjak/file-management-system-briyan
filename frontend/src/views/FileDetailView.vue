@@ -99,8 +99,8 @@ onBeforeUnmount(clearPreview)
   <section class="space-y-5">
     <div class="flex flex-wrap items-start justify-between gap-3">
       <div>
-        <h1 class="text-2xl font-semibold dark:text-slate-100">{{ file?.title || 'File detail' }}</h1>
-        <p class="text-sm text-slate-600 dark:text-slate-400">Metadata, preview, and download.</p>
+        <h2 class="text-xl font-bold tracking-tight">{{ file?.title || 'File detail' }}</h2>
+        <p class="page-subtitle">Metadata, preview, and download.</p>
       </div>
 
       <div class="flex flex-wrap gap-2">
@@ -124,39 +124,39 @@ onBeforeUnmount(clearPreview)
     <p v-else-if="error" class="text-sm text-red-600">{{ error }}</p>
 
     <template v-else-if="file">
-      <dl class="grid gap-4 rounded-lg border border-slate-200 bg-white p-4 sm:grid-cols-2 dark:border-slate-700 dark:bg-slate-900">
+      <dl class="surface-card grid gap-4 p-4 sm:grid-cols-2">
         <div>
-          <dt class="text-sm text-slate-500">Folder name</dt>
-          <dd class="font-medium dark:text-slate-100">{{ file.folder?.name || '—' }}</dd>
+          <dt class="text-sm text-[var(--muted)]">Folder name</dt>
+          <dd class="font-semibold">{{ file.folder?.name || '—' }}</dd>
         </div>
         <div>
-          <dt class="text-sm text-slate-500">File name</dt>
-          <dd class="font-medium dark:text-slate-100">{{ file.original_name || '—' }}</dd>
+          <dt class="text-sm text-[var(--muted)]">File name</dt>
+          <dd class="font-semibold">{{ file.original_name || '—' }}</dd>
         </div>
         <div>
-          <dt class="text-sm text-slate-500">Title</dt>
-          <dd class="font-medium dark:text-slate-100">{{ file.title }}</dd>
+          <dt class="text-sm text-[var(--muted)]">Title</dt>
+          <dd class="font-semibold">{{ file.title }}</dd>
         </div>
         <div>
-          <dt class="text-sm text-slate-500">Department</dt>
-          <dd class="font-medium dark:text-slate-100">{{ file.department?.name || '—' }}</dd>
+          <dt class="text-sm text-[var(--muted)]">Department</dt>
+          <dd class="font-semibold">{{ file.department?.name || '—' }}</dd>
         </div>
         <div>
-          <dt class="text-sm text-slate-500">Uploaded by</dt>
-          <dd class="font-medium dark:text-slate-100">{{ file.user?.name || '—' }}</dd>
+          <dt class="text-sm text-[var(--muted)]">Uploaded by</dt>
+          <dd class="font-semibold">{{ file.user?.name || '—' }}</dd>
         </div>
         <div>
-          <dt class="text-sm text-slate-500">Upload date</dt>
-          <dd class="font-medium dark:text-slate-100">{{ new Date(file.created_at).toLocaleString() }}</dd>
+          <dt class="text-sm text-[var(--muted)]">Upload date</dt>
+          <dd class="font-semibold">{{ new Date(file.created_at).toLocaleString() }}</dd>
         </div>
       </dl>
 
       <!-- Preview only for image and PDF mime types. -->
       <div
         v-if="canPreview"
-        class="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900"
+        class="surface-card p-4"
       >
-        <h2 class="mb-3 flex items-center gap-2 text-lg font-medium dark:text-slate-100">
+        <h2 class="mb-3 flex items-center gap-2 text-lg font-bold tracking-tight">
           <Eye class="size-5" :stroke-width="2" />
           Preview
         </h2>

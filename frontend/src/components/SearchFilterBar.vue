@@ -1,5 +1,5 @@
 <!--
-  Text and department filter bar for folder/file index screens.
+  Search and department filter bar for folder/file index screens.
   Available to Administrator and Viewer; emits filters for parent API calls.
 -->
 <script setup>
@@ -23,13 +23,11 @@ const local = ref({
   department_id: props.modelValue.department_id || '',
 })
 
-// GET /departments so the filter dropdown has options.
 async function loadDepartments() {
   const { data } = await api.get('/departments')
   departments.value = data
 }
 
-// Push current filter values to the parent and trigger a search.
 function applyFilters() {
   const next = {
     q: local.value.q,
@@ -39,7 +37,6 @@ function applyFilters() {
   emit('search', next)
 }
 
-// Reset filters and ask the parent to reload unfiltered data.
 function clearFilters() {
   local.value = { q: '', department_id: '' }
   applyFilters()
@@ -60,23 +57,26 @@ loadDepartments()
 </script>
 
 <template>
-  <form class="flex flex-wrap items-end gap-3" @submit.prevent="applyFilters">
+  <form
+    class="surface-card flex flex-wrap items-end gap-3 p-3"
+    @submit.prevent="applyFilters"
+  >
     <label class="min-w-48 flex-1 space-y-1 text-sm">
-      <span>Search</span>
-      <input
-        v-model="local.q"
-        type="search"
-        placeholder="Name or title"
-        class="w-full rounded border border-slate-300 px-3 py-2 dark:border-slate-600 dark:bg-slate-900"
-      />
+      <span class="text-[var(--muted)]">Document name</span>
+      <div class="relative">
+        <Search class="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[var(--muted)]" :stroke-width="2" />
+        <input
+          v-model="local.q"
+          type="search"
+          placeholder="Search by name or title"
+          class="field-input search-input"
+        />
+      </div>
     </label>
 
     <label class="min-w-40 space-y-1 text-sm">
-      <span>Department</span>
-      <select
-        v-model="local.department_id"
-        class="w-full rounded border border-slate-300 px-3 py-2 dark:border-slate-600 dark:bg-slate-900"
-      >
+      <span class="text-[var(--muted)]">Department</span>
+      <select v-model="local.department_id" class="field-input">
         <option value="">All departments</option>
         <option
           v-for="department in departments"
@@ -89,7 +89,7 @@ loadDepartments()
     </label>
 
     <BaseButton type="submit" :icon="Search">Apply</BaseButton>
-    <BaseButton type="button" variant="secondary" :icon="Eraser" @click="clearFilters">
+    <BaseButton type="button" variant="ghost" :icon="Eraser" @click="clearFilters">
       Clear
     </BaseButton>
   </form>

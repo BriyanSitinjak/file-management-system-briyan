@@ -20,35 +20,34 @@ defineProps({
 </script>
 
 <template>
-  <div class="overflow-x-auto rounded border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+  <div class="surface-card overflow-x-auto">
     <table class="min-w-full text-left text-sm">
-      <thead class="bg-slate-50 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+      <thead class="bg-[var(--canvas)] text-[var(--muted)]">
         <tr>
           <th
             v-for="column in columns"
             :key="column.key"
-            class="px-3 py-2 font-medium"
+            class="px-4 py-3 font-semibold"
           >
             {{ column.label }}
           </th>
         </tr>
       </thead>
       <tbody>
-        <!-- Empty state when the parent has no rows to show. -->
         <tr v-if="rows.length === 0">
-          <td :colspan="columns.length" class="px-3 py-6 text-center text-slate-500">
+          <td :colspan="columns.length" class="px-4 py-8 text-center text-[var(--muted)]">
             {{ emptyText }}
           </td>
         </tr>
         <tr
           v-for="(row, index) in rows"
           :key="row.id ?? index"
-          class="border-t border-slate-100 dark:border-slate-800"
+          class="border-t border-[var(--line)]"
         >
           <td
             v-for="column in columns"
             :key="column.key"
-            class="px-3 py-2 text-slate-800 dark:text-slate-100"
+            class="px-4 py-3 text-[var(--ink)]"
           >
             <slot :name="`cell-${column.key}`" :row="row">
               {{ row[column.key] }}

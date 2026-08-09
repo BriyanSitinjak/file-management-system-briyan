@@ -26,16 +26,17 @@ defineProps({
 })
 
 const variants = {
-  primary: 'bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white',
-  secondary: 'border border-slate-300 bg-white text-slate-800 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700',
-  danger: 'bg-red-600 text-white hover:bg-red-500',
+  primary: 'bg-[var(--brand)] text-white hover:bg-[var(--brand-strong)]',
+  secondary: 'border border-[var(--line)] bg-white text-[var(--ink)] hover:bg-[var(--brand-soft)] dark:bg-[var(--panel)]',
+  ghost: 'border border-[var(--line)] bg-transparent text-[var(--ink)] hover:bg-[var(--brand-soft)]',
+  danger: 'bg-rose-600 text-white hover:bg-rose-500',
 }
 </script>
 
 <template>
   <motion.button
     :type="type"
-    class="inline-flex items-center justify-center gap-2 rounded px-3 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50"
+    class="inline-flex items-center justify-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
     :class="variants[variant] || variants.primary"
     :disabled="disabled"
     :while-hover="disabled ? undefined : { scale: 1.02 }"

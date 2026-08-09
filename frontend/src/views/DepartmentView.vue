@@ -85,8 +85,7 @@ onMounted(loadDepartments)
   <section class="space-y-5">
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div>
-        <h1 class="text-2xl font-semibold">Departments</h1>
-        <p class="text-sm text-slate-600">Create, rename, and remove departments.</p>
+        <p class="page-subtitle">Create, rename, and remove departments.</p>
       </div>
       <BaseButton :icon="Plus" @click="openCreate">Create department</BaseButton>
     </div>

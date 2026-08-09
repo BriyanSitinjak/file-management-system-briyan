@@ -43,8 +43,7 @@ onMounted(loadLogs)
 <template>
   <section class="space-y-5">
     <div>
-      <h1 class="text-2xl font-semibold dark:text-slate-100">Activity log</h1>
-      <p class="text-sm text-slate-600 dark:text-slate-400">
+      <p class="page-subtitle">
         Recent create, update, delete, and download events.
       </p>
     </div>

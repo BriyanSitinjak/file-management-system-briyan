@@ -70,8 +70,7 @@ onMounted(loadTrash)
 <template>
   <section class="space-y-6">
     <div>
-      <h1 class="text-2xl font-semibold dark:text-slate-100">Trash</h1>
-      <p class="text-sm text-slate-600 dark:text-slate-400">
+      <p class="page-subtitle">
         Soft-deleted items that can still be restored.
       </p>
     </div>

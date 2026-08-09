@@ -4,14 +4,12 @@
 -->
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import {
   Check,
-  ExternalLink,
   FolderPlus,
-  Folder as FolderIcon,
-  Pencil,
-  Trash2,
+  LayoutGrid,
+  List,
   Upload,
   X,
 } from '@lucide/vue'
@@ -20,12 +18,12 @@ import { useAuthStore } from '../stores/auth'
 import BaseButton from '../components/BaseButton.vue'
 import BaseModal from '../components/BaseModal.vue'
 import DataTable from '../components/DataTable.vue'
+import FolderCard from '../components/FolderCard.vue'
 import SearchFilterBar from '../components/SearchFilterBar.vue'
 import UploadModal from '../components/UploadModal.vue'
 
 const auth = useAuthStore()
 const route = useRoute()
-const router = useRouter()
 
 const loading = ref(false)
 const error = ref('')
@@ -34,6 +32,7 @@ const breadcrumbs = ref([])
 const childFolders = ref([])
 const files = ref([])
 const filters = ref({ q: '', department_id: '' })
+const viewMode = ref('grid')
 
 const showCreateFolder = ref(false)
 const showRenameFolder = ref(false)
@@ -51,7 +50,6 @@ const fileColumns = [
   { key: 'department', label: 'Department' },
   { key: 'user', label: 'Uploaded by' },
   { key: 'created_at', label: 'Uploaded' },
-  { key: 'actions', label: 'Actions' },
 ]
 
 // GET /departments for the create-folder department select.
@@ -81,7 +79,6 @@ async function loadFolderContents() {
       folder.value = null
       breadcrumbs.value = [{ id: null, name: 'Root' }]
       childFolders.value = data
-      // Root listing focuses on folders; files live inside concrete folders.
       files.value = []
     } else {
       const { data } = await api.get(`/folders/${folderId.value}`)
@@ -90,7 +87,6 @@ async function loadFolderContents() {
       childFolders.value = data.folder.children || []
       files.value = mapFiles(data.folder.files || [])
 
-      // Apply client-side filter when viewing a specific folder payload.
       if (filters.value.q) {
         const q = filters.value.q.toLowerCase()
         childFolders.value = childFolders.value.filter((item) =>
@@ -115,7 +111,6 @@ async function loadFolderContents() {
   }
 }
 
-// Normalize file rows for the shared table.
 function mapFiles(items) {
   return items.map((file) => ({
     ...file,
@@ -125,13 +120,11 @@ function mapFiles(items) {
   }))
 }
 
-// Apply SearchFilterBar values and reload the current folder listing.
 function onSearch(nextFilters) {
   filters.value = nextFilters
   loadFolderContents()
 }
 
-// POST /folders to create a child folder under the current location.
 async function createFolder() {
   if (!folderName.value.trim()) return
 
@@ -146,14 +139,12 @@ async function createFolder() {
   await loadFolderContents()
 }
 
-// Open the rename modal for a selected folder row.
 function openRename(target) {
   renameTarget.value = target
   folderName.value = target.name
   showRenameFolder.value = true
 }
 
-// PUT /folders/{id} to rename the selected folder.
 async function renameFolder() {
   if (!renameTarget.value || !folderName.value.trim()) return
 
@@ -167,14 +158,12 @@ async function renameFolder() {
   await loadFolderContents()
 }
 
-// DELETE /folders/{id} after confirmation.
 async function deleteFolder(target) {
   if (!confirm(`Delete folder "${target.name}"?`)) return
   await api.delete(`/folders/${target.id}`)
   await loadFolderContents()
 }
 
-// DELETE /files/{id} after confirmation.
 async function deleteFile(target) {
   if (!confirm(`Delete file "${target.title}"?`)) return
   await api.delete(`/files/${target.id}`)
@@ -182,8 +171,11 @@ async function deleteFile(target) {
 }
 
 watch(
-  () => route.params.id,
+  () => [route.params.id, route.query.q],
   () => {
+    if (typeof route.query.q === 'string') {
+      filters.value.q = route.query.q
+    }
     loadFolderContents()
   },
   { immediate: true },
@@ -194,100 +186,141 @@ loadDepartments()
 
 <template>
   <section class="space-y-5">
-    <div class="flex flex-wrap items-start justify-between gap-3">
-      <div>
-        <h1 class="text-2xl font-semibold">
-          {{ folder?.name || 'Folders' }}
-        </h1>
-        <nav class="mt-2 flex flex-wrap gap-1 text-sm text-slate-500">
-          <template v-for="(crumb, index) in breadcrumbs" :key="crumb.id ?? 'root'">
-            <RouterLink
-              class="hover:underline"
-              :to="crumb.id ? `/folders/${crumb.id}` : '/folders'"
-            >
-              {{ crumb.name }}
-            </RouterLink>
-            <span v-if="index < breadcrumbs.length - 1">/</span>
-          </template>
-        </nav>
-      </div>
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <nav class="flex flex-wrap items-center gap-1 text-sm text-[var(--muted)]">
+        <template v-for="(crumb, index) in breadcrumbs" :key="crumb.id ?? 'root'">
+          <RouterLink
+            class="rounded-md px-1.5 py-0.5 hover:bg-[var(--brand-soft)] hover:text-[var(--brand-strong)]"
+            :to="crumb.id ? `/folders/${crumb.id}` : '/folders'"
+          >
+            {{ crumb.name }}
+          </RouterLink>
+          <span v-if="index < breadcrumbs.length - 1">/</span>
+        </template>
+      </nav>
 
-      <!-- Admin only: mutation actions stay hidden for Viewers. -->
-      <div v-if="auth.isAdmin" class="flex flex-wrap gap-2">
-        <BaseButton :icon="FolderPlus" @click="showCreateFolder = true">
-          Create folder
-        </BaseButton>
-        <!-- Upload needs a concrete folder id, so hide it on the root listing. -->
-        <BaseButton
-          v-if="!isRoot"
-          variant="secondary"
-          :icon="Upload"
-          @click="showUpload = true"
-        >
-          Upload file
-        </BaseButton>
+      <div class="flex flex-wrap items-center gap-2">
+        <!-- Admin only: mutation actions stay hidden for Viewers. -->
+        <template v-if="auth.isAdmin">
+          <BaseButton :icon="FolderPlus" @click="showCreateFolder = true">
+            Create New Folder
+          </BaseButton>
+          <BaseButton
+            v-if="!isRoot"
+            variant="ghost"
+            :icon="Upload"
+            @click="showUpload = true"
+          >
+            Add New File
+          </BaseButton>
+        </template>
+
+        <div class="inline-flex rounded-xl border border-[var(--line)] bg-[var(--panel)] p-1">
+          <button
+            type="button"
+            class="rounded-lg p-1.5"
+            :class="viewMode === 'list' ? 'bg-[var(--brand-soft)] text-[var(--brand-strong)]' : 'text-[var(--muted)]'"
+            @click="viewMode = 'list'"
+          >
+            <List class="size-4" :stroke-width="2" />
+          </button>
+          <button
+            type="button"
+            class="rounded-lg p-1.5"
+            :class="viewMode === 'grid' ? 'bg-[var(--brand-soft)] text-[var(--brand-strong)]' : 'text-[var(--muted)]'"
+            @click="viewMode = 'grid'"
+          >
+            <LayoutGrid class="size-4" :stroke-width="2" />
+          </button>
+        </div>
       </div>
     </div>
 
     <SearchFilterBar v-model="filters" @search="onSearch" />
 
-    <p v-if="loading" class="text-sm text-slate-500">Loading folder contents…</p>
-    <p v-else-if="error" class="text-sm text-red-600">{{ error }}</p>
+    <p v-if="loading" class="text-sm text-[var(--muted)]">Loading documents…</p>
+    <p v-else-if="error" class="text-sm text-rose-600">{{ error }}</p>
 
     <template v-else>
-      <div class="space-y-3">
-        <h2 class="text-lg font-medium">Child folders</h2>
-        <div v-if="childFolders.length === 0" class="text-sm text-slate-500">
-          No child folders.
-        </div>
-        <ul v-else class="divide-y rounded border border-slate-200 bg-white">
-          <li
-            v-for="child in childFolders"
-            :key="child.id"
-            class="flex flex-wrap items-center justify-between gap-3 px-3 py-2"
+      <div v-if="viewMode === 'grid'" class="space-y-6">
+        <div>
+          <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">
+            Folders
+          </h2>
+          <div
+            v-if="childFolders.length === 0"
+            class="surface-card px-4 py-8 text-center text-sm text-[var(--muted)]"
           >
-            <RouterLink class="inline-flex items-center gap-2 font-medium underline" :to="`/folders/${child.id}`">
-              <FolderIcon class="size-4 shrink-0" :stroke-width="2" />
-              {{ child.name }}
-            </RouterLink>
-            <!-- Admin only: rename and delete for folders. -->
-            <div v-if="auth.isAdmin" class="flex gap-2">
-              <BaseButton variant="secondary" :icon="Pencil" @click="openRename(child)">
-                Rename
-              </BaseButton>
-              <BaseButton variant="danger" :icon="Trash2" @click="deleteFolder(child)">
-                Delete
-              </BaseButton>
-            </div>
-          </li>
-        </ul>
+            No folders here yet.
+          </div>
+          <div v-else class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+            <FolderCard
+              v-for="(child, index) in childFolders"
+              :key="child.id"
+              kind="folder"
+              :item="child"
+              :tone-index="index"
+              @rename="openRename"
+              @delete="deleteFolder"
+            />
+          </div>
+        </div>
+
+        <div v-if="!isRoot">
+          <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">
+            Files
+          </h2>
+          <div
+            v-if="files.length === 0"
+            class="surface-card px-4 py-8 text-center text-sm text-[var(--muted)]"
+          >
+            No files in this folder.
+          </div>
+          <div v-else class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+            <FolderCard
+              v-for="(file, index) in files"
+              :key="file.id"
+              kind="file"
+              :item="file"
+              :tone-index="index + 2"
+              @delete="deleteFile"
+            />
+          </div>
+        </div>
       </div>
 
-      <div class="space-y-3">
-        <h2 class="text-lg font-medium">Files</h2>
-        <DataTable :columns="fileColumns" :rows="files" empty-text="No files in this folder.">
-          <template #cell-title="{ row }">
-            <RouterLink class="underline" :to="`/files/${row.id}`">{{ row.title }}</RouterLink>
-          </template>
-          <template #cell-actions="{ row }">
-            <div class="flex gap-2">
-              <BaseButton
-                variant="secondary"
-                :icon="ExternalLink"
-                @click="router.push(`/files/${row.id}`)"
-              >
-                Open
-              </BaseButton>
-              <!-- Admin only: file delete from the folder listing. -->
-              <BaseButton
-                v-if="auth.isAdmin"
-                variant="danger"
-                :icon="Trash2"
-                @click="deleteFile(row)"
-              >
-                Delete
-              </BaseButton>
-            </div>
+      <div v-else class="space-y-4">
+        <DataTable
+          :columns="[
+            { key: 'name', label: 'Name' },
+            { key: 'type', label: 'Type' },
+            { key: 'department', label: 'Department' },
+            { key: 'updated', label: 'Modified' },
+          ]"
+          :rows="[
+            ...childFolders.map((item) => ({
+              id: `folder-${item.id}`,
+              name: item.name,
+              type: 'Folder',
+              department: item.department?.name || '—',
+              updated: new Date(item.updated_at || item.created_at).toLocaleDateString(),
+              href: `/folders/${item.id}`,
+            })),
+            ...files.map((item) => ({
+              id: `file-${item.id}`,
+              name: item.title,
+              type: 'File',
+              department: item.department || '—',
+              updated: new Date(item.updated_at || item.created_at).toLocaleDateString(),
+              href: `/files/${item.id}`,
+            })),
+          ]"
+          empty-text="No documents found."
+        >
+          <template #cell-name="{ row }">
+            <RouterLink class="font-semibold text-[var(--brand-strong)] hover:underline" :to="row.href">
+              {{ row.name }}
+            </RouterLink>
           </template>
         </DataTable>
       </div>
@@ -297,21 +330,11 @@ loadDepartments()
       <form class="space-y-4" @submit.prevent="createFolder">
         <label class="block space-y-1 text-sm">
           <span>Name</span>
-          <input
-            v-model="folderName"
-            type="text"
-            required
-            class="w-full rounded border border-slate-300 px-3 py-2"
-          />
+          <input v-model="folderName" type="text" required class="field-input" />
         </label>
-        <!-- Department select is needed when creating under root with no inherited department. -->
         <label v-if="isRoot" class="block space-y-1 text-sm">
           <span>Department</span>
-          <select
-            v-model="createDepartmentId"
-            required
-            class="w-full rounded border border-slate-300 px-3 py-2"
-          >
+          <select v-model="createDepartmentId" required class="field-input">
             <option
               v-for="department in departments"
               :key="department.id"
@@ -334,12 +357,7 @@ loadDepartments()
       <form class="space-y-4" @submit.prevent="renameFolder">
         <label class="block space-y-1 text-sm">
           <span>Name</span>
-          <input
-            v-model="folderName"
-            type="text"
-            required
-            class="w-full rounded border border-slate-300 px-3 py-2"
-          />
+          <input v-model="folderName" type="text" required class="field-input" />
         </label>
         <div class="flex justify-end gap-2">
           <BaseButton variant="secondary" :icon="X" @click="showRenameFolder = false">

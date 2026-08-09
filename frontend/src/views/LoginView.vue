@@ -19,7 +19,6 @@ const password = ref('password')
 const error = ref('')
 const loading = ref(false)
 
-// Call auth.login which POSTs /login, then redirect to the intended page.
 async function onSubmit() {
   error.value = ''
   loading.value = true
@@ -36,36 +35,31 @@ async function onSubmit() {
 </script>
 
 <template>
-  <div class="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4">
-    <MotionFade>
-      <h1 class="mb-2 flex items-center gap-2 text-2xl font-semibold text-slate-900">
-        <FolderOpen class="size-7" :stroke-width="2" />
-        File Management
+  <div class="relative flex min-h-screen items-center justify-center px-4 py-10">
+    <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_#d8f3ee,_transparent_40%),radial-gradient(circle_at_bottom_right,_#e8eef7,_transparent_45%)]" />
+
+    <MotionFade class="relative w-full max-w-md">
+      <p class="mb-3 text-sm font-bold tracking-tight text-[var(--brand)]">
+        File management hub
+      </p>
+      <h1 class="page-title flex items-center gap-2">
+        <FolderOpen class="size-8 text-[var(--brand)]" :stroke-width="2" />
+        Welcome back
       </h1>
-      <p class="mb-6 text-sm text-slate-600">Sign in with a demo account to continue.</p>
+      <p class="page-subtitle mb-6">Sign in with a demo account to continue.</p>
 
-      <form class="space-y-4 rounded-lg border border-slate-200 bg-white p-5" @submit.prevent="onSubmit">
+      <form class="surface-card space-y-4 p-5" @submit.prevent="onSubmit">
         <label class="block space-y-1 text-sm">
-          <span>Email</span>
-          <input
-            v-model="email"
-            type="email"
-            required
-            class="w-full rounded border border-slate-300 px-3 py-2"
-          />
+          <span class="text-[var(--muted)]">Email</span>
+          <input v-model="email" type="email" required class="field-input" />
         </label>
 
         <label class="block space-y-1 text-sm">
-          <span>Password</span>
-          <input
-            v-model="password"
-            type="password"
-            required
-            class="w-full rounded border border-slate-300 px-3 py-2"
-          />
+          <span class="text-[var(--muted)]">Password</span>
+          <input v-model="password" type="password" required class="field-input" />
         </label>
 
-        <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
+        <p v-if="error" class="text-sm text-rose-600">{{ error }}</p>
 
         <BaseButton type="submit" :icon="LogIn" :disabled="loading" class="w-full">
           {{ loading ? 'Signing in…' : 'Sign in' }}

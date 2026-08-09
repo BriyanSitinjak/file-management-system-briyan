@@ -1,10 +1,8 @@
-<!--
-  Admin activity feed listing recent mutations across folders and files.
-  Administrator only; router and API both enforce the role check.
--->
 <script setup>
 import { onMounted, ref } from 'vue'
 import api from '../lib/api'
+import { formatDateTime } from '../lib/dates'
+import { getErrorMessage } from '../lib/errors'
 import DataTable from '../components/DataTable.vue'
 
 const loading = ref(true)
@@ -18,7 +16,6 @@ const columns = [
   { key: 'description', label: 'Details' },
 ]
 
-// GET /activity-logs for the newest 100 mutation events.
 async function loadLogs() {
   loading.value = true
   error.value = ''
@@ -28,10 +25,10 @@ async function loadLogs() {
     logs.value = data.map((log) => ({
       ...log,
       user: log.user?.name || 'System',
-      created_at: new Date(log.created_at).toLocaleString(),
+      created_at: formatDateTime(log.created_at),
     }))
   } catch (err) {
-    error.value = err.response?.data?.message || 'Failed to load activity logs.'
+    error.value = getErrorMessage(err, 'Failed to load activity logs.')
   } finally {
     loading.value = false
   }
@@ -48,8 +45,8 @@ onMounted(loadLogs)
       </p>
     </div>
 
-    <p v-if="loading" class="text-sm text-slate-500">Loading activity…</p>
-    <p v-else-if="error" class="text-sm text-red-600">{{ error }}</p>
+    <p v-if="loading" class="text-sm text-[var(--muted)]">Loading activity…</p>
+    <p v-else-if="error" class="text-sm text-rose-600">{{ error }}</p>
     <DataTable
       v-else
       :columns="columns"

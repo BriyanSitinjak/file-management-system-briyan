@@ -1,12 +1,9 @@
-<!--
-  Folder/file tile used in the manage-documents grid.
-  Browse for all roles; admin actions appear in the overflow menu.
--->
 <script setup>
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { FileText, Folder, MoreVertical, Pencil, Trash2 } from '@lucide/vue'
 import { AnimatePresence, motion } from 'motion-v'
+import { formatDate } from '../lib/dates'
 import { useAuthStore } from '../stores/auth'
 import { scaleIn, transitions } from '../lib/motion'
 
@@ -37,7 +34,7 @@ const subtitle = computed(() => {
 })
 const modified = computed(() => {
   const value = props.item.updated_at || props.item.created_at
-  return value ? `Modified ${new Date(value).toLocaleDateString()}` : ''
+  return value ? `Modified ${formatDate(value)}` : ''
 })
 
 function openItem() {
@@ -66,7 +63,6 @@ function onDelete() {
     :transition="transitions.snappy"
     @click="openItem"
   >
-    <!-- Admin only overflow actions. -->
     <button
       v-if="auth.isAdmin"
       type="button"

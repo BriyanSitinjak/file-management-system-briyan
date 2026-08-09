@@ -1,7 +1,3 @@
-<!--
-  Authenticated app chrome with sidebar navigation and top bar.
-  Visible to Administrator and Viewer; admin-only links are hidden for Viewers.
--->
 <script setup>
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -28,6 +24,14 @@ const ui = useUiStore()
 const router = useRouter()
 const route = useRoute()
 
+const navItems = [
+  { to: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/folders', label: 'Documents', icon: FolderOpen },
+  { to: '/departments', label: 'Departments', icon: Building2, adminOnly: true },
+  { to: '/activity', label: 'Activity', icon: Activity, adminOnly: true },
+  { to: '/trash', label: 'Trash', icon: Trash2, adminOnly: true },
+]
+
 const initials = computed(() => {
   const name = auth.user?.name || 'User'
   return name
@@ -50,7 +54,6 @@ const pageTitle = computed(() => {
   return titles[route.name] || 'File Management'
 })
 
-// Confirm, then POST /logout and return to the login screen.
 async function onLogout() {
   const confirmed = await ui.confirm({
     title: 'Log out?',
@@ -64,7 +67,6 @@ async function onLogout() {
   await router.replace('/login')
 }
 
-// Navigate from the mobile drawer and then close it.
 async function go(path) {
   ui.closeMobileNav()
   await router.push(path)
@@ -79,7 +81,6 @@ function onGlobalSearch(event) {
 <template>
   <div class="min-h-screen bg-[var(--canvas)] text-[var(--ink)]">
     <div class="mx-auto flex min-h-screen max-w-7xl">
-      <!-- Desktop sidebar -->
       <aside class="hidden w-72 shrink-0 border-r border-[var(--line)] bg-[var(--panel)] p-5 md:flex md:flex-col">
         <div class="flex items-center justify-between gap-2">
           <p class="text-lg font-bold tracking-tight text-[var(--brand)]">
@@ -106,27 +107,16 @@ function onGlobalSearch(event) {
         </div>
 
         <nav class="mt-6 space-y-1">
-          <RouterLink class="nav-link" to="/">
-            <LayoutDashboard class="size-4 shrink-0" :stroke-width="2" />
-            Dashboard
-          </RouterLink>
-          <RouterLink class="nav-link" to="/folders">
-            <FolderOpen class="size-4 shrink-0" :stroke-width="2" />
-            Documents
-          </RouterLink>
-          <!-- Admin only links stay hidden for Viewers. -->
-          <RouterLink v-if="auth.isAdmin" class="nav-link" to="/departments">
-            <Building2 class="size-4 shrink-0" :stroke-width="2" />
-            Departments
-          </RouterLink>
-          <RouterLink v-if="auth.isAdmin" class="nav-link" to="/activity">
-            <Activity class="size-4 shrink-0" :stroke-width="2" />
-            Activity
-          </RouterLink>
-          <RouterLink v-if="auth.isAdmin" class="nav-link" to="/trash">
-            <Trash2 class="size-4 shrink-0" :stroke-width="2" />
-            Trash
-          </RouterLink>
+          <template v-for="item in navItems" :key="item.to">
+            <RouterLink
+              v-if="item.adminOnly ? auth.isAdmin : true"
+              class="nav-link"
+              :to="item.to"
+            >
+              <component :is="item.icon" class="size-4 shrink-0" :stroke-width="2" />
+              {{ item.label }}
+            </RouterLink>
+          </template>
         </nav>
 
         <div class="mt-auto space-y-2 pt-6">
@@ -159,7 +149,6 @@ function onGlobalSearch(event) {
               />
             </label>
 
-            <!-- Mobile only: sidebar (and its theme toggle) is hidden below md. -->
             <BaseButton
               class="md:hidden"
               variant="secondary"
@@ -174,7 +163,6 @@ function onGlobalSearch(event) {
           </div>
         </header>
 
-        <!-- Mobile drawer -->
         <AnimatePresence>
           <motion.div
             v-if="ui.mobileNavOpen"
@@ -186,38 +174,16 @@ function onGlobalSearch(event) {
             :transition="transitions.snappy"
           >
             <nav class="flex flex-col gap-1">
-              <button class="nav-link w-full text-left" @click="go('/')">
-                <LayoutDashboard class="size-4 shrink-0" :stroke-width="2" />
-                Dashboard
-              </button>
-              <button class="nav-link w-full text-left" @click="go('/folders')">
-                <FolderOpen class="size-4 shrink-0" :stroke-width="2" />
-                Documents
-              </button>
-              <button
-                v-if="auth.isAdmin"
-                class="nav-link w-full text-left"
-                @click="go('/departments')"
-              >
-                <Building2 class="size-4 shrink-0" :stroke-width="2" />
-                Departments
-              </button>
-              <button
-                v-if="auth.isAdmin"
-                class="nav-link w-full text-left"
-                @click="go('/activity')"
-              >
-                <Activity class="size-4 shrink-0" :stroke-width="2" />
-                Activity
-              </button>
-              <button
-                v-if="auth.isAdmin"
-                class="nav-link w-full text-left"
-                @click="go('/trash')"
-              >
-                <Trash2 class="size-4 shrink-0" :stroke-width="2" />
-                Trash
-              </button>
+              <template v-for="item in navItems" :key="item.to">
+                <button
+                  v-if="item.adminOnly ? auth.isAdmin : true"
+                  class="nav-link w-full text-left"
+                  @click="go(item.to)"
+                >
+                  <component :is="item.icon" class="size-4 shrink-0" :stroke-width="2" />
+                  {{ item.label }}
+                </button>
+              </template>
               <button class="nav-link w-full text-left" @click="onLogout">
                 <LogOut class="size-4 shrink-0" :stroke-width="2" />
                 Logout

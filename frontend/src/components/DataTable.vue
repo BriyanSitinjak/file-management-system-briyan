@@ -1,7 +1,3 @@
-<!--
-  Shared table for listing files, departments, and dashboard rows.
-  Usable by Administrator and Viewer; action columns are provided by the parent.
--->
 <script setup>
 defineProps({
   columns: {

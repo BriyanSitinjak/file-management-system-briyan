@@ -1,11 +1,8 @@
-<!--
-  Login screen for unauthenticated users.
-  Guest only; authenticated users are redirected away by the router guard.
--->
 <script setup>
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { FolderOpen, LogIn } from '@lucide/vue'
+import { getErrorMessage } from '../lib/errors'
 import { useAuthStore } from '../stores/auth'
 import BaseButton from '../components/BaseButton.vue'
 import MotionFade from '../components/motion/MotionFade.vue'
@@ -27,7 +24,7 @@ async function onSubmit() {
     await auth.login(email.value, password.value)
     await router.replace(route.query.redirect || '/')
   } catch (err) {
-    error.value = err.response?.data?.message || 'Login failed.'
+    error.value = getErrorMessage(err, 'Login failed.')
   } finally {
     loading.value = false
   }

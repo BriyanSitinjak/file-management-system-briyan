@@ -1,6 +1,3 @@
-<!--
-  Confirm dialog for destructive actions (delete). Success/error use toasts.
--->
 <script setup>
 import { X } from '@lucide/vue'
 import { AnimatePresence, motion } from 'motion-v'

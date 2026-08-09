@@ -1,7 +1,3 @@
-<!--
-  Core folder browser listing child folders and files for the current folder.
-  Administrator and Viewer can browse; Create/Rename/Delete/Upload are admin only.
--->
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
@@ -12,10 +8,13 @@ import {
   X,
 } from '@lucide/vue'
 import api from '../lib/api'
+import { getErrorMessage } from '../lib/errors'
+import { useDepartments } from '../composables/useDepartments'
 import { useAuthStore } from '../stores/auth'
 import { useUiStore } from '../stores/ui'
 import BaseButton from '../components/BaseButton.vue'
 import BaseModal from '../components/BaseModal.vue'
+import BreadcrumbNav from '../components/BreadcrumbNav.vue'
 import FolderCard from '../components/FolderCard.vue'
 import SearchFilterBar from '../components/SearchFilterBar.vue'
 import UploadModal from '../components/UploadModal.vue'
@@ -23,6 +22,7 @@ import UploadModal from '../components/UploadModal.vue'
 const auth = useAuthStore()
 const ui = useUiStore()
 const route = useRoute()
+const { departments, loadDepartments } = useDepartments()
 
 const loading = ref(false)
 const error = ref('')
@@ -38,21 +38,17 @@ const showUpload = ref(false)
 const folderName = ref('')
 const renameTarget = ref(null)
 const createDepartmentId = ref('')
-const departments = ref([])
 
 const folderId = computed(() => route.params.id || null)
 const isRoot = computed(() => !folderId.value)
 
-// GET /departments for the create-folder department select.
-async function loadDepartments() {
-  const { data } = await api.get('/departments')
-  departments.value = data
-  if (!createDepartmentId.value && data[0]) {
-    createDepartmentId.value = String(data[0].id)
+async function ensureDepartments() {
+  await loadDepartments()
+  if (!createDepartmentId.value && departments.value[0]) {
+    createDepartmentId.value = String(departments.value[0].id)
   }
 }
 
-// Load either root children via GET /folders or a folder show via GET /folders/{id}.
 async function loadFolderContents() {
   loading.value = true
   error.value = ''
@@ -96,7 +92,7 @@ async function loadFolderContents() {
       }
     }
   } catch (err) {
-    error.value = err.response?.data?.message || 'Failed to load folders.'
+    error.value = getErrorMessage(err, 'Failed to load folders.')
   } finally {
     loading.value = false
   }
@@ -107,7 +103,6 @@ function mapFiles(items) {
     ...file,
     department: file.department?.name || '—',
     user: file.user?.name || '—',
-    created_at: new Date(file.created_at).toLocaleString(),
   }))
 }
 
@@ -131,7 +126,7 @@ async function createFolder() {
     await loadFolderContents()
     ui.notifySuccess('Folder created', 'The new folder is ready to use.')
   } catch (err) {
-    ui.notifyError('Could not create folder', err.response?.data?.message || 'Please try again.')
+    ui.notifyError('Could not create folder', getErrorMessage(err, 'Please try again.'))
   }
 }
 
@@ -155,7 +150,7 @@ async function renameFolder() {
     await loadFolderContents()
     ui.notifySuccess('Folder updated', 'The folder name was saved.')
   } catch (err) {
-    ui.notifyError('Could not update folder', err.response?.data?.message || 'Please try again.')
+    ui.notifyError('Could not update folder', getErrorMessage(err, 'Please try again.'))
   }
 }
 
@@ -172,7 +167,7 @@ async function deleteFolder(target) {
     await loadFolderContents()
     ui.notifySuccess('Folder deleted', `"${target.name}" was moved to trash.`)
   } catch (err) {
-    ui.notifyError('Could not delete folder', err.response?.data?.message || 'Please try again.')
+    ui.notifyError('Could not delete folder', getErrorMessage(err, 'Please try again.'))
   }
 }
 
@@ -189,7 +184,7 @@ async function deleteFile(target) {
     await loadFolderContents()
     ui.notifySuccess('File deleted', `"${target.title}" was moved to trash.`)
   } catch (err) {
-    ui.notifyError('Could not delete file', err.response?.data?.message || 'Please try again.')
+    ui.notifyError('Could not delete file', getErrorMessage(err, 'Please try again.'))
   }
 }
 
@@ -209,26 +204,15 @@ watch(
   { immediate: true },
 )
 
-loadDepartments()
+ensureDepartments()
 </script>
 
 <template>
   <section class="space-y-5">
     <div class="flex flex-wrap items-center justify-between gap-3">
-      <nav class="flex flex-wrap items-center gap-1 text-sm text-[var(--muted)]">
-        <template v-for="(crumb, index) in breadcrumbs" :key="crumb.id ?? 'root'">
-          <RouterLink
-            class="rounded-md px-1.5 py-0.5 hover:bg-[var(--brand-soft)] hover:text-[var(--brand-strong)]"
-            :to="crumb.id ? `/folders/${crumb.id}` : '/folders'"
-          >
-            {{ crumb.name }}
-          </RouterLink>
-          <span v-if="index < breadcrumbs.length - 1">/</span>
-        </template>
-      </nav>
+      <BreadcrumbNav :items="breadcrumbs" />
 
       <div class="flex flex-wrap items-center gap-2">
-        <!-- Admin only: mutation actions stay hidden for Viewers. -->
         <template v-if="auth.isAdmin">
           <BaseButton :icon="FolderPlus" @click="showCreateFolder = true">
             Create New Folder

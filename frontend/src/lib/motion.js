@@ -1,7 +1,4 @@
-/**
- * Shared Motion (Framer Motion for Vue) presets.
- * Keep view files thin: import presets instead of inlining animation objects.
- */
+/** Shared motion-v presets for views and layout chrome. */
 
 export const transitions = {
   soft: { duration: 0.28, ease: 'easeOut' },
@@ -32,7 +29,6 @@ export const slideDown = {
   exit: { opacity: 0, y: -8 },
 }
 
-/** Stagger delay helper for list/card indexes. */
 export function staggerDelay(index, step = 0.05) {
   return index * step
 }

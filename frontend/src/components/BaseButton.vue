@@ -1,7 +1,3 @@
-<!--
-  Shared button used across folder, file, and department screens.
-  Available to all authenticated roles; variants control visual weight only.
--->
 <script setup>
 import { motion } from 'motion-v'
 import { transitions } from '../lib/motion'

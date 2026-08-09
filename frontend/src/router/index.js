@@ -28,7 +28,6 @@ const router = createRouter({
       component: () => import('../views/FileDetailView.vue'),
       meta: { requiresAuth: true },
     },
-    // Admin only: departments management. Mark future create/edit routes with requiresAdmin too.
     {
       path: '/departments',
       name: 'departments',
@@ -50,11 +49,8 @@ const router = createRouter({
   ],
 })
 
-// Navigation guard checks, in order:
-// 1) guest routes: redirect authenticated users away from /login
-// 2) auth routes: require a token, otherwise send the user to /login
-// 3) session hydrate: if token exists but user is missing, call fetchMe()
-// 4) admin routes: /departments (and any route with requiresAdmin) require isAdmin
+// guest → leave /login if already signed in; auth → require token;
+// hydrate /me when needed; requiresAdmin → Administrators only.
 router.beforeEach(async (to) => {
   const auth = useAuthStore()
 

@@ -1,11 +1,9 @@
-<!--
-  Soft-deleted folders and files with restore actions.
-  Administrator only; uses SoftDeletes records from the trash API.
--->
 <script setup>
 import { onMounted, ref } from 'vue'
 import { RotateCcw } from '@lucide/vue'
 import api from '../lib/api'
+import { formatDateTime } from '../lib/dates'
+import { getErrorMessage } from '../lib/errors'
 import { useUiStore } from '../stores/ui'
 import BaseButton from '../components/BaseButton.vue'
 import DataTable from '../components/DataTable.vue'
@@ -30,7 +28,6 @@ const fileColumns = [
   { key: 'actions', label: 'Actions' },
 ]
 
-// GET /trash for soft-deleted folders and files.
 async function loadTrash() {
   loading.value = true
   error.value = ''
@@ -40,39 +37,37 @@ async function loadTrash() {
     folders.value = (data.folders || []).map((folder) => ({
       ...folder,
       department: folder.department?.name || '—',
-      deleted_at: new Date(folder.deleted_at).toLocaleString(),
+      deleted_at: formatDateTime(folder.deleted_at),
     }))
     files.value = (data.files || []).map((file) => ({
       ...file,
       folder: file.folder?.name || '—',
-      deleted_at: new Date(file.deleted_at).toLocaleString(),
+      deleted_at: formatDateTime(file.deleted_at),
     }))
   } catch (err) {
-    error.value = err.response?.data?.message || 'Failed to load trash.'
+    error.value = getErrorMessage(err, 'Failed to load trash.')
   } finally {
     loading.value = false
   }
 }
 
-// POST /trash/folders/{id}/restore to undelete a folder.
 async function restoreFolder(folder) {
   try {
     await api.post(`/trash/folders/${folder.id}/restore`)
     await loadTrash()
     ui.notifySuccess('Folder restored', `"${folder.name}" is available again.`)
   } catch (err) {
-    ui.notifyError('Could not restore folder', err.response?.data?.message || 'Please try again.')
+    ui.notifyError('Could not restore folder', getErrorMessage(err, 'Please try again.'))
   }
 }
 
-// POST /trash/files/{id}/restore to undelete a file.
 async function restoreFile(file) {
   try {
     await api.post(`/trash/files/${file.id}/restore`)
     await loadTrash()
     ui.notifySuccess('File restored', `"${file.title}" is available again.`)
   } catch (err) {
-    ui.notifyError('Could not restore file', err.response?.data?.message || 'Please try again.')
+    ui.notifyError('Could not restore file', getErrorMessage(err, 'Please try again.'))
   }
 }
 
@@ -87,8 +82,8 @@ onMounted(loadTrash)
       </p>
     </div>
 
-    <p v-if="loading" class="text-sm text-slate-500">Loading trash…</p>
-    <p v-else-if="error" class="text-sm text-red-600">{{ error }}</p>
+    <p v-if="loading" class="text-sm text-[var(--muted)]">Loading trash…</p>
+    <p v-else-if="error" class="text-sm text-rose-600">{{ error }}</p>
 
     <template v-else>
       <div class="space-y-3">

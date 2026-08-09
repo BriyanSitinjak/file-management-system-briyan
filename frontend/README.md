@@ -1,5 +1,67 @@
-# Vue 3 + Vite
+# Frontend — File Management System
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+Antarmuka pengguna berbasis Vue 3 untuk mengelola folder dan file melalui API backend.
 
-Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).
+## Requirement
+
+- Node.js 18 atau lebih baru
+- pnpm atau npm
+- Backend API yang sudah berjalan di `http://localhost:8000`
+
+## Cara Instalasi
+
+```bash
+cd frontend
+pnpm install
+```
+
+Apabila menggunakan npm, jalankan `npm install`.
+
+## Konfigurasi Environment
+
+Frontend terhubung ke API pada alamat:
+
+```text
+http://localhost:8000/api
+```
+
+Konfigurasi tersebut berada di `src/lib/api.js`. Pastikan backend sudah berjalan sebelum membuka aplikasi.
+
+## Cara Menjalankan Project
+
+```bash
+pnpm dev
+```
+
+Aplikasi tersedia di [http://localhost:5173](http://localhost:5173).
+
+Untuk membangun versi production:
+
+```bash
+pnpm build
+pnpm preview
+```
+
+## Halaman Utama
+
+- Login
+- Dashboard
+- Documents (folder dan file)
+- File detail (preview dan download)
+- Departments (Administrator)
+- Activity Log (Administrator)
+- Trash (Administrator)
+
+## Akun Login
+
+**Administrator**
+
+- Email: `admin@example.com`
+- Password: `password`
+
+**Viewer**
+
+- Email: `viewer@example.com`
+- Password: `password`
+
+Dokumentasi backend tersedia di [README Backend](../backend/README.md).

@@ -1,7 +1,3 @@
-<!--
-  Shared modal shell for create/edit dialogs (upload, folder rename, departments).
-  Visible to whoever opens it; parent screens gate open actions by role.
--->
 <script setup>
 import { X } from '@lucide/vue'
 import { AnimatePresence, motion } from 'motion-v'

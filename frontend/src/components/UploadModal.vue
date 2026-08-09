@@ -1,11 +1,9 @@
-<!--
-  Admin only upload dialog for creating a file in the current folder.
-  Viewers must not open this modal; parent screens gate the trigger button.
--->
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { Upload, X } from '@lucide/vue'
 import api from '../lib/api'
+import { getErrorMessage } from '../lib/errors'
+import { useDepartments } from '../composables/useDepartments'
 import BaseModal from './BaseModal.vue'
 import BaseButton from './BaseButton.vue'
 
@@ -26,10 +24,11 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'uploaded'])
 
+const { departments, loadDepartments } = useDepartments()
+
 const title = ref('')
 const selectedDepartmentId = ref('')
 const file = ref(null)
-const departments = ref([])
 const error = ref('')
 const loading = ref(false)
 const dragging = ref(false)
@@ -42,16 +41,14 @@ const resolvedFolderId = computed(() => {
   return String(props.folderId)
 })
 
-// GET /departments for the department select options.
-async function loadDepartments() {
-  const { data } = await api.get('/departments')
-  departments.value = data
+async function ensureDepartments() {
+  await loadDepartments()
 
   if (!selectedDepartmentId.value && props.departmentId) {
     selectedDepartmentId.value = String(props.departmentId)
   }
-  if (!selectedDepartmentId.value && data[0]) {
-    selectedDepartmentId.value = String(data[0].id)
+  if (!selectedDepartmentId.value && departments.value[0]) {
+    selectedDepartmentId.value = String(departments.value[0].id)
   }
 }
 
@@ -66,24 +63,20 @@ function resetForm() {
   }
 }
 
-// Keep the selected file from a standard file input change.
 function onFileChange(event) {
   file.value = event.target.files?.[0] || null
   error.value = ''
 }
 
-// Highlight the dropzone while a file is dragged over it.
 function onDragOver(event) {
   event.preventDefault()
   dragging.value = true
 }
 
-// Clear drag highlight when the pointer leaves the dropzone.
 function onDragLeave() {
   dragging.value = false
 }
 
-// Accept a dropped file into the form state.
 function onDrop(event) {
   event.preventDefault()
   dragging.value = false
@@ -106,7 +99,6 @@ function validate() {
   return ''
 }
 
-// POST /files with multipart form data for title, department, folder, and file.
 async function submitUpload() {
   error.value = validate()
   if (error.value) return
@@ -120,19 +112,13 @@ async function submitUpload() {
     formData.append('folder_id', resolvedFolderId.value)
     formData.append('file', file.value, file.value.name)
 
-    // Let Axios set multipart + boundary automatically from FormData.
     await api.post('/files', formData)
 
     resetForm()
     emit('uploaded')
     emit('close')
   } catch (err) {
-    const errors = err.response?.data?.errors
-    if (errors) {
-      error.value = Object.values(errors).flat().join(' ')
-    } else {
-      error.value = err.response?.data?.message || 'Upload failed.'
-    }
+    error.value = getErrorMessage(err, 'Upload failed.')
   } finally {
     loading.value = false
   }
@@ -144,7 +130,7 @@ watch(
     if (isOpen) {
       error.value = ''
       selectedDepartmentId.value = props.departmentId ? String(props.departmentId) : ''
-      loadDepartments()
+      ensureDepartments()
     } else {
       resetForm()
     }

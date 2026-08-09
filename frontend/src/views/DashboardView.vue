@@ -1,13 +1,11 @@
-<!--
-  Dashboard overview with totals and the latest uploaded files.
-  Available to Administrator and Viewer after authentication.
--->
 <script setup>
 import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { Building2, FileText, FolderOpen, Users } from '@lucide/vue'
 import { motion } from 'motion-v'
 import api from '../lib/api'
+import { formatDateTime } from '../lib/dates'
+import { getErrorMessage } from '../lib/errors'
 import DataTable from '../components/DataTable.vue'
 import MotionFade from '../components/motion/MotionFade.vue'
 import { fadeUp, staggerDelay, transitions } from '../lib/motion'
@@ -49,10 +47,10 @@ async function loadDashboard() {
       department: file.department?.name || '—',
       folder: file.folder?.name || '—',
       user: file.user?.name || '—',
-      created_at: new Date(file.created_at).toLocaleString(),
+      created_at: formatDateTime(file.created_at),
     }))
   } catch (err) {
-    error.value = err.response?.data?.message || 'Failed to load dashboard.'
+    error.value = getErrorMessage(err, 'Failed to load dashboard.')
   } finally {
     loading.value = false
   }

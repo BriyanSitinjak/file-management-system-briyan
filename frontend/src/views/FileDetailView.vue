@@ -1,15 +1,14 @@
-<!--
-  File detail screen with metadata, download, and PDF/image preview.
-  Available to Administrator and Viewer; delete stays admin only.
--->
 <script setup>
 import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Download, Eye, Trash2 } from '@lucide/vue'
 import api from '../lib/api'
+import { formatDateTime } from '../lib/dates'
+import { getErrorMessage } from '../lib/errors'
 import { useAuthStore } from '../stores/auth'
 import { useUiStore } from '../stores/ui'
 import BaseButton from '../components/BaseButton.vue'
+import BreadcrumbNav from '../components/BreadcrumbNav.vue'
 
 const auth = useAuthStore()
 const ui = useUiStore()
@@ -27,7 +26,6 @@ const isImage = computed(() => (file.value?.mime_type || '').startsWith('image/'
 const isPdf = computed(() => file.value?.mime_type === 'application/pdf')
 const canPreview = computed(() => isImage.value || isPdf.value)
 
-// GET /files/{id} for the detail payload.
 async function loadFile() {
   loading.value = true
   error.value = ''
@@ -41,7 +39,7 @@ async function loadFile() {
       await loadPreview()
     }
   } catch (err) {
-    error.value = err.response?.data?.message || 'Failed to load file.'
+    error.value = getErrorMessage(err, 'Failed to load file.')
   } finally {
     loading.value = false
   }
@@ -58,12 +56,6 @@ function fallbackBreadcrumbs(item) {
   ]
 }
 
-function crumbTo(crumb) {
-  if (crumb.type === 'file') return null
-  return crumb.id ? `/folders/${crumb.id}` : '/folders'
-}
-
-// GET /files/{id}/preview as a blob and build an object URL for iframe/img.
 async function loadPreview() {
   previewError.value = ''
 
@@ -77,7 +69,6 @@ async function loadPreview() {
   }
 }
 
-// Release the object URL when leaving the page or changing files.
 function clearPreview() {
   if (previewUrl.value) {
     window.URL.revokeObjectURL(previewUrl.value)
@@ -85,7 +76,6 @@ function clearPreview() {
   }
 }
 
-// GET /files/{id}/download and trigger a browser file save.
 async function downloadFile() {
   const response = await api.get(`/files/${route.params.id}/download`, {
     responseType: 'blob',
@@ -99,7 +89,6 @@ async function downloadFile() {
   window.URL.revokeObjectURL(blobUrl)
 }
 
-// DELETE /files/{id} then return to the parent folder.
 async function deleteFile() {
   const title = file.value?.title || 'this file'
   const confirmed = await ui.confirm({
@@ -114,7 +103,7 @@ async function deleteFile() {
     ui.notifySuccess('File deleted', `"${title}" was moved to trash.`)
     await router.push(file.value?.folder_id ? `/folders/${file.value.folder_id}` : '/folders')
   } catch (err) {
-    ui.notifyError('Could not delete file', err.response?.data?.message || 'Please try again.')
+    ui.notifyError('Could not delete file', getErrorMessage(err, 'Please try again.'))
   }
 }
 
@@ -130,27 +119,12 @@ onBeforeUnmount(clearPreview)
 <template>
   <section class="space-y-5">
     <div class="flex flex-wrap items-center justify-between gap-3">
-      <nav class="flex flex-wrap items-center gap-1 text-sm text-[var(--muted)]">
-        <template v-for="(crumb, index) in breadcrumbs" :key="`${crumb.type || 'folder'}-${crumb.id ?? 'root'}`">
-          <RouterLink
-            v-if="crumbTo(crumb)"
-            class="rounded-md px-1.5 py-0.5 hover:bg-[var(--brand-soft)] hover:text-[var(--brand-strong)]"
-            :to="crumbTo(crumb)"
-          >
-            {{ crumb.name }}
-          </RouterLink>
-          <span v-else class="px-1.5 py-0.5 font-medium text-[var(--ink)]">
-            {{ crumb.name }}
-          </span>
-          <span v-if="index < breadcrumbs.length - 1">/</span>
-        </template>
-      </nav>
+      <BreadcrumbNav :items="breadcrumbs" />
 
       <div class="flex flex-wrap gap-2">
         <BaseButton :icon="Download" :disabled="!file" @click="downloadFile">
           Download
         </BaseButton>
-        <!-- Admin only: destructive delete stays hidden for Viewers. -->
         <BaseButton
           v-if="auth.isAdmin"
           variant="danger"
@@ -168,8 +142,8 @@ onBeforeUnmount(clearPreview)
       <p class="page-subtitle">Metadata, preview, and download.</p>
     </div>
 
-    <p v-if="loading" class="text-sm text-slate-500">Loading file…</p>
-    <p v-else-if="error" class="text-sm text-red-600">{{ error }}</p>
+    <p v-if="loading" class="text-sm text-[var(--muted)]">Loading file…</p>
+    <p v-else-if="error" class="text-sm text-rose-600">{{ error }}</p>
 
     <template v-else-if="file">
       <dl class="surface-card grid gap-4 p-4 sm:grid-cols-2">
@@ -195,11 +169,10 @@ onBeforeUnmount(clearPreview)
         </div>
         <div>
           <dt class="text-sm text-[var(--muted)]">Upload date</dt>
-          <dd class="font-semibold">{{ new Date(file.created_at).toLocaleString() }}</dd>
+          <dd class="font-semibold">{{ formatDateTime(file.created_at) }}</dd>
         </div>
       </dl>
 
-      <!-- Preview only for image and PDF mime types. -->
       <div
         v-if="canPreview"
         class="surface-card p-4"
@@ -208,7 +181,7 @@ onBeforeUnmount(clearPreview)
           <Eye class="size-5" :stroke-width="2" />
           Preview
         </h2>
-        <p v-if="previewError" class="text-sm text-red-600">{{ previewError }}</p>
+        <p v-if="previewError" class="text-sm text-rose-600">{{ previewError }}</p>
         <img
           v-else-if="isImage && previewUrl"
           :src="previewUrl"

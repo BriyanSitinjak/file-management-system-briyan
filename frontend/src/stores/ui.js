@@ -19,19 +19,16 @@ export const useUiStore = defineStore('ui', () => {
   const confirmDialog = ref(emptyConfirm())
   const toastTimers = new Map()
 
-  // Apply the dark class on <html> and persist the preference.
   function applyDarkMode(enabled) {
     darkMode.value = enabled
     localStorage.setItem('darkMode', String(enabled))
     document.documentElement.classList.toggle('dark', enabled)
   }
 
-  // Flip dark mode on or off from the top bar toggle.
   function toggleDarkMode() {
     applyDarkMode(!darkMode.value)
   }
 
-  // Open or close the mobile sidebar drawer.
   function toggleMobileNav() {
     mobileNavOpen.value = !mobileNavOpen.value
   }
@@ -49,7 +46,6 @@ export const useUiStore = defineStore('ui', () => {
     toasts.value = toasts.value.filter((toast) => toast.id !== id)
   }
 
-  // Push a toast; success auto-dismisses, errors stay a bit longer.
   function notify({ type = 'success', title, message = '', durationMs } = {}) {
     const id = ++toastSeq
     const duration = durationMs ?? (type === 'error' ? 4500 : 2800)
@@ -72,7 +68,6 @@ export const useUiStore = defineStore('ui', () => {
     notify({ type: 'error', title, message })
   }
 
-  // Close the confirm modal; resolve the waiting promise with the result.
   function closeConfirm(result = false) {
     const resolve = confirmDialog.value._resolve
     confirmDialog.value = emptyConfirm()
@@ -81,7 +76,6 @@ export const useUiStore = defineStore('ui', () => {
     }
   }
 
-  // Ask for confirmation (delete, etc.). Resolves true when confirmed.
   function confirm({
     title = 'Are you sure?',
     message = '',

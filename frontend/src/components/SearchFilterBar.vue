@@ -1,11 +1,7 @@
-<!--
-  Search and department filter bar for folder/file index screens.
-  Available to Administrator and Viewer; emits filters for parent API calls.
--->
 <script setup>
 import { ref, watch } from 'vue'
 import { Eraser, Search } from '@lucide/vue'
-import api from '../lib/api'
+import { useDepartments } from '../composables/useDepartments'
 import BaseButton from './BaseButton.vue'
 
 const props = defineProps({
@@ -17,16 +13,11 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'search'])
 
-const departments = ref([])
+const { departments, loadDepartments } = useDepartments()
 const local = ref({
   q: props.modelValue.q || '',
   department_id: props.modelValue.department_id || '',
 })
-
-async function loadDepartments() {
-  const { data } = await api.get('/departments')
-  departments.value = data
-}
 
 function applyFilters() {
   const next = {

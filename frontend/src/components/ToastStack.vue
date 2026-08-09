@@ -1,6 +1,3 @@
-<!--
-  Global toast stack for success/error feedback after user actions.
--->
 <script setup>
 import { AlertCircle, CheckCircle2, X } from '@lucide/vue'
 import { AnimatePresence, motion } from 'motion-v'

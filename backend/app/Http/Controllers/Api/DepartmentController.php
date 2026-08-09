@@ -3,47 +3,56 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreDepartmentRequest;
+use App\Models\Department;
+use App\Services\DepartmentService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class DepartmentController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function __construct(private DepartmentService $departments) {}
+
+    public function index(): JsonResponse
     {
-        //
+        $this->authorize('viewAny', Department::class);
+
+        return response()->json($this->departments->list());
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(StoreDepartmentRequest $request): JsonResponse
     {
-        //
+        $this->authorize('create', Department::class);
+
+        $department = $this->departments->store($request->validated());
+
+        return response()->json($department, 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show(Department $department): JsonResponse
     {
-        //
+        $this->authorize('view', $department);
+
+        return response()->json($department);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Department $department): JsonResponse
     {
-        //
+        $this->authorize('update', $department);
+
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+        ]);
+
+        return response()->json($this->departments->update($department, $data));
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(Department $department): JsonResponse
     {
-        //
+        $this->authorize('delete', $department);
+
+        $this->departments->delete($department);
+
+        return response()->json(null, 204);
     }
 }

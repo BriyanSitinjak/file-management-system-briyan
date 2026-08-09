@@ -14,6 +14,13 @@ class Folder extends Model
 {
     use SoftDeletes;
 
+    protected $fillable = [
+        'name',
+        'department_id',
+        'parent_id',
+        'user_id',
+    ];
+
     // Links folders to departments (many-to-one).
     public function department(): BelongsTo
     {

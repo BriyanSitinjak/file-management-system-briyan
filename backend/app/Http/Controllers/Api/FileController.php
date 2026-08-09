@@ -3,55 +3,61 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreFileRequest;
+use App\Http\Requests\UpdateFileRequest;
+use App\Models\File;
+use App\Services\FileService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FileController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function __construct(private FileService $files) {}
+
+    public function index(Request $request): JsonResponse
     {
-        //
+        $this->authorize('viewAny', File::class);
+
+        return response()->json($this->files->list($request->only(['folder_id', 'department_id', 'q'])));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(StoreFileRequest $request): JsonResponse
     {
-        //
+        $this->authorize('create', File::class);
+
+        $file = $this->files->store($request->validated(), $request->user());
+
+        return response()->json($file, 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show(File $file): JsonResponse
     {
-        //
+        $this->authorize('view', $file);
+
+        return response()->json($this->files->show($file));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(UpdateFileRequest $request, File $file): JsonResponse
     {
-        //
+        $this->authorize('update', $file);
+
+        return response()->json($this->files->update($file, $request->validated(), $request->user()));
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(Request $request, File $file): JsonResponse
     {
-        //
+        $this->authorize('delete', $file);
+
+        $this->files->delete($file, $request->user());
+
+        return response()->json(null, 204);
     }
 
-    /**
-     * Download the specified file.
-     */
-    public function download(string $file)
+    public function download(Request $request, File $file): StreamedResponse
     {
-        //
+        $this->authorize('view', $file);
+
+        return $this->files->download($file, $request->user());
     }
 }

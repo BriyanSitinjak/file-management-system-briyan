@@ -16,9 +16,9 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class FileService
 {
     /**
-     * List files, optionally scoped by folder and/or department.
+     * List files, optionally scoped by folder, department, and title search.
      *
-     * @param  array{folder_id?: int, department_id?: int}  $filters
+     * @param  array{folder_id?: int, department_id?: int, q?: string}  $filters
      * @return Collection<int, File>
      */
     public function list(array $filters = []): Collection
@@ -27,6 +27,10 @@ class FileService
             ->with(['department', 'folder', 'user'])
             ->when(isset($filters['folder_id']), fn ($query) => $query->where('folder_id', $filters['folder_id']))
             ->when(isset($filters['department_id']), fn ($query) => $query->where('department_id', $filters['department_id']))
+            ->when(
+                filled($filters['q'] ?? null),
+                fn ($query) => $query->where('title', 'like', '%'.$filters['q'].'%'),
+            )
             ->latest()
             ->get();
     }

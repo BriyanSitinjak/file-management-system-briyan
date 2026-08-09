@@ -19,20 +19,20 @@ const router = createRouter({
     {
       path: '/folders/:id?',
       name: 'folders',
-      component: () => import('../views/FoldersView.vue'),
+      component: () => import('../views/FolderView.vue'),
       meta: { requiresAuth: true },
     },
     {
       path: '/files/:id',
       name: 'files',
-      component: () => import('../views/FileView.vue'),
+      component: () => import('../views/FileDetailView.vue'),
       meta: { requiresAuth: true },
     },
     // Admin only: departments management. Mark future create/edit routes with requiresAdmin too.
     {
       path: '/departments',
       name: 'departments',
-      component: () => import('../views/DepartmentsView.vue'),
+      component: () => import('../views/DepartmentView.vue'),
       meta: { requiresAuth: true, requiresAdmin: true },
     },
   ],

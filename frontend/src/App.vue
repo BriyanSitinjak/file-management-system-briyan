@@ -1,7 +1,15 @@
 <script setup>
-import HelloWorld from './components/HelloWorld.vue'
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+import AppLayout from './layouts/AppLayout.vue'
+
+const route = useRoute()
+const showLayout = computed(() => !route.meta.guest)
 </script>
 
 <template>
-  <HelloWorld />
+  <AppLayout v-if="showLayout">
+    <RouterView />
+  </AppLayout>
+  <RouterView v-else />
 </template>

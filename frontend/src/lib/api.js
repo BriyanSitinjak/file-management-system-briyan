@@ -24,7 +24,8 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // Skip login itself: invalid credentials are also 401 and should stay on the form.
+    if (error.response?.status === 401 && !error.config?.url?.includes('/login')) {
       const authStore = useAuthStore()
       authStore.clearAuth()
 

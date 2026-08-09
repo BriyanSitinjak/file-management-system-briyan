@@ -46,4 +46,12 @@ class FileController extends Controller
     {
         //
     }
+
+    /**
+     * Download the specified file.
+     */
+    public function download(string $file)
+    {
+        //
+    }
 }

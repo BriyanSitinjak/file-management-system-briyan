@@ -11,7 +11,7 @@ class ActivityLogController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        abort_unless($request->user()?->role === 'Administrator', 403);
+        abort_unless($request->user()?->isAdmin(), 403);
 
         $logs = ActivityLog::query()
             ->with('user')

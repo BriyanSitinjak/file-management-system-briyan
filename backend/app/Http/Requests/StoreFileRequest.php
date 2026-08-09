@@ -7,9 +7,6 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreFileRequest extends FormRequest
 {
-    /**
-     * Real auth is handled by the Policy; this request only validates input.
-     */
     public function authorize(): bool
     {
         return true;

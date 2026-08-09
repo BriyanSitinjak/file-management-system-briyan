@@ -7,15 +7,8 @@ use App\Models\Folder;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
-/**
- * Seeds a small nested folder tree under the demo departments.
- * Exists so browsing and upload flows have parent folders ready without manual setup.
- */
 class FolderSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $admin = User::query()->where('email', 'admin@example.com')->firstOrFail();

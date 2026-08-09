@@ -2,14 +2,14 @@
 
 namespace App\Services;
 
-use App\Models\ActivityLog;
 use App\Models\Folder;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\DB;
 
 class FolderService
 {
+    public function __construct(private ActivityLogger $activity) {}
+
     /**
      * @param  array{parent_id?: int|null, department_id?: int, q?: string}  $filters
      * @return Collection<int, Folder>
@@ -33,7 +33,7 @@ class FolderService
     }
 
     /**
-     * @return array{folder: Folder, breadcrumbs: list<array{id: int, name: string}>}
+     * @return array{folder: Folder, breadcrumbs: list<array{id: int|null, name: string}>}
      */
     public function show(Folder $folder): array
     {
@@ -48,7 +48,7 @@ class FolderService
 
         return [
             'folder' => $folder,
-            'breadcrumbs' => $this->ancestors($folder),
+            'breadcrumbs' => $this->breadcrumbsFor($folder),
         ];
     }
 
@@ -64,7 +64,7 @@ class FolderService
             'user_id' => $user->id,
         ]);
 
-        $this->log($user, 'folder.created', $folder, "Created folder {$folder->name}");
+        $this->activity->log($user, 'folder.created', $folder, "Created folder {$folder->name}");
 
         return $folder->load(['department', 'user', 'parent']);
     }
@@ -78,7 +78,7 @@ class FolderService
             'name' => $data['name'],
         ]);
 
-        $this->log($user, 'folder.updated', $folder, "Renamed folder to {$folder->name}");
+        $this->activity->log($user, 'folder.updated', $folder, "Renamed folder to {$folder->name}");
 
         return $folder->fresh(['department', 'user', 'parent']);
     }
@@ -86,26 +86,19 @@ class FolderService
     public function delete(Folder $folder, User $user): void
     {
         $name = $folder->name;
-
-        DB::transaction(function () use ($folder) {
-            $folder->delete();
-        });
-
-        $this->log($user, 'folder.deleted', $folder, "Deleted folder {$name}");
+        $folder->delete();
+        $this->activity->log($user, 'folder.deleted', $folder, "Deleted folder {$name}");
     }
 
     public function restore(Folder $folder, User $user): Folder
     {
         $folder->restore();
-
-        $this->log($user, 'folder.restored', $folder, "Restored folder {$folder->name}");
+        $this->activity->log($user, 'folder.restored', $folder, "Restored folder {$folder->name}");
 
         return $folder->fresh(['department', 'user', 'parent']);
     }
 
     /**
-     * Build Root → … → folder breadcrumbs in display order.
-     *
      * @return list<array{id: int|null, name: string}>
      */
     public function breadcrumbsFor(Folder $folder): array
@@ -127,24 +120,5 @@ class FolderService
         ]);
 
         return $trail;
-    }
-
-    /**
-     * @return list<array{id: int|null, name: string}>
-     */
-    private function ancestors(Folder $folder): array
-    {
-        return $this->breadcrumbsFor($folder);
-    }
-
-    private function log(User $user, string $action, Folder $folder, string $description): void
-    {
-        ActivityLog::query()->create([
-            'user_id' => $user->id,
-            'action' => $action,
-            'subject_type' => $folder->getMorphClass(),
-            'subject_id' => $folder->id,
-            'description' => $description,
-        ]);
     }
 }

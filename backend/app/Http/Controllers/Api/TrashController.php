@@ -19,7 +19,7 @@ class TrashController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        abort_unless($request->user()?->role === 'Administrator', 403);
+        abort_unless($request->user()?->isAdmin(), 403);
 
         return response()->json([
             'folders' => Folder::onlyTrashed()

@@ -11,9 +11,6 @@ use Illuminate\Http\JsonResponse;
 
 class DashboardController extends Controller
 {
-    /**
-     * Return dashboard summary data.
-     */
     public function index(): JsonResponse
     {
         return response()->json([

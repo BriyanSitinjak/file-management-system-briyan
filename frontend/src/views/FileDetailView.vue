@@ -19,6 +19,7 @@ const router = useRouter()
 const loading = ref(true)
 const error = ref('')
 const file = ref(null)
+const breadcrumbs = ref([])
 const previewUrl = ref('')
 const previewError = ref('')
 
@@ -35,6 +36,7 @@ async function loadFile() {
   try {
     const { data } = await api.get(`/files/${route.params.id}`)
     file.value = data.file || data
+    breadcrumbs.value = data.breadcrumbs || fallbackBreadcrumbs(file.value)
     if (canPreview.value) {
       await loadPreview()
     }
@@ -43,6 +45,22 @@ async function loadFile() {
   } finally {
     loading.value = false
   }
+}
+
+function fallbackBreadcrumbs(item) {
+  if (!item) return [{ id: null, name: 'Root' }]
+  return [
+    { id: null, name: 'Root' },
+    ...(item.folder
+      ? [{ id: item.folder.id, name: item.folder.name }]
+      : []),
+    { id: item.id, name: item.title, type: 'file' },
+  ]
+}
+
+function crumbTo(crumb) {
+  if (crumb.type === 'file') return null
+  return crumb.id ? `/folders/${crumb.id}` : '/folders'
 }
 
 // GET /files/{id}/preview as a blob and build an object URL for iframe/img.
@@ -111,11 +129,22 @@ onBeforeUnmount(clearPreview)
 
 <template>
   <section class="space-y-5">
-    <div class="flex flex-wrap items-start justify-between gap-3">
-      <div>
-        <h2 class="text-xl font-bold tracking-tight">{{ file?.title || 'File detail' }}</h2>
-        <p class="page-subtitle">Metadata, preview, and download.</p>
-      </div>
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <nav class="flex flex-wrap items-center gap-1 text-sm text-[var(--muted)]">
+        <template v-for="(crumb, index) in breadcrumbs" :key="`${crumb.type || 'folder'}-${crumb.id ?? 'root'}`">
+          <RouterLink
+            v-if="crumbTo(crumb)"
+            class="rounded-md px-1.5 py-0.5 hover:bg-[var(--brand-soft)] hover:text-[var(--brand-strong)]"
+            :to="crumbTo(crumb)"
+          >
+            {{ crumb.name }}
+          </RouterLink>
+          <span v-else class="px-1.5 py-0.5 font-medium text-[var(--ink)]">
+            {{ crumb.name }}
+          </span>
+          <span v-if="index < breadcrumbs.length - 1">/</span>
+        </template>
+      </nav>
 
       <div class="flex flex-wrap gap-2">
         <BaseButton :icon="Download" :disabled="!file" @click="downloadFile">
@@ -132,6 +161,11 @@ onBeforeUnmount(clearPreview)
           Delete
         </BaseButton>
       </div>
+    </div>
+
+    <div>
+      <h2 class="text-xl font-bold tracking-tight">{{ file?.title || 'File detail' }}</h2>
+      <p class="page-subtitle">Metadata, preview, and download.</p>
     </div>
 
     <p v-if="loading" class="text-sm text-slate-500">Loading file…</p>

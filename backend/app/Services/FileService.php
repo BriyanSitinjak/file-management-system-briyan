@@ -16,6 +16,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class FileService
 {
+    public function __construct(private FolderService $folders) {}
+
     /**
      * List files, optionally scoped by folder, department, and title search.
      *
@@ -67,13 +69,28 @@ class FileService
     }
 
     /**
-     * Return a single file with its related department, folder, and owner.
+     * Return a single file with relations and folder breadcrumbs for navigation.
      *
-     * @return File The file model with relations loaded.
+     * @return array{file: File, breadcrumbs: list<array{id: int|null, name: string, type?: string}>}
      */
-    public function show(File $file): File
+    public function show(File $file): array
     {
-        return $file->loadMissing(['department', 'folder', 'user']);
+        $file->loadMissing(['department', 'folder.parent', 'user']);
+
+        $breadcrumbs = $file->folder
+            ? $this->folders->breadcrumbsFor($file->folder)
+            : [['id' => null, 'name' => 'Root']];
+
+        $breadcrumbs[] = [
+            'id' => $file->id,
+            'name' => $file->title,
+            'type' => 'file',
+        ];
+
+        return [
+            'file' => $file,
+            'breadcrumbs' => $breadcrumbs,
+        ];
     }
 
     /**

@@ -264,11 +264,10 @@ loadDepartments()
           </div>
           <div v-else class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             <FolderCard
-              v-for="(child, index) in childFolders"
+              v-for="child in childFolders"
               :key="child.id"
               kind="folder"
               :item="child"
-              :tone-index="index"
               @rename="openRename"
               @delete="deleteFolder"
             />
@@ -287,11 +286,10 @@ loadDepartments()
           </div>
           <div v-else class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             <FolderCard
-              v-for="(file, index) in files"
+              v-for="file in files"
               :key="file.id"
               kind="file"
               :item="file"
-              :tone-index="index + 2"
               @delete="deleteFile"
             />
           </div>
@@ -343,7 +341,7 @@ loadDepartments()
 
     <UploadModal
       :open="showUpload"
-      :folder-id="folderId"
+      :folder-id="folder?.id ?? folderId"
       :department-id="folder?.department_id"
       @close="showUpload = false"
       @uploaded="onUploaded"

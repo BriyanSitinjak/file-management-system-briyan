@@ -71,27 +71,34 @@ onMounted(loadDashboard)
     <p v-else-if="error" class="text-sm text-rose-600">{{ error }}</p>
 
     <template v-else>
-      <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div class="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <motion.article
           v-for="(card, index) in cards"
           :key="card.key"
-          class="surface-card p-4"
+          class="surface-card flex h-full min-h-[8rem] w-full flex-col justify-between p-5"
           :initial="fadeUp.initial"
           :animate="fadeUp.animate"
           :transition="{ ...transitions.soft, delay: staggerDelay(index) }"
-          :while-hover="{ y: -3 }"
+          :while-hover="{ y: -2 }"
         >
-          <div class="flex items-center justify-between gap-3">
-            <p class="text-sm text-[var(--muted)]">{{ card.label }}</p>
-            <span class="inline-flex rounded-2xl p-2.5" :class="card.tone">
+          <div class="flex items-start justify-between gap-3">
+            <p class="pt-1 text-sm font-medium leading-none text-[var(--muted)]">
+              {{ card.label }}
+            </p>
+            <span
+              class="inline-flex size-10 shrink-0 items-center justify-center rounded-full"
+              :class="card.tone"
+            >
               <component :is="card.icon" class="size-4" :stroke-width="2" />
             </span>
           </div>
-          <p class="mt-4 text-3xl font-bold tracking-tight">{{ totals[card.key] }}</p>
+          <p class="text-3xl font-bold leading-none tracking-tight tabular-nums">
+            {{ totals[card.key] }}
+          </p>
         </motion.article>
       </div>
 
-      <MotionFade :delay="0.15" class="space-y-3">
+      <MotionFade :delay="0.15" class="space-y-4">
         <h2 class="text-lg font-bold tracking-tight">Latest files</h2>
         <DataTable :columns="columns" :rows="latestFiles" empty-text="No files uploaded yet.">
           <template #cell-title="{ row }">

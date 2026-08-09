@@ -104,29 +104,37 @@ class FolderService
     }
 
     /**
+     * Build Root → … → folder breadcrumbs in display order.
+     *
+     * @return list<array{id: int|null, name: string}>
+     */
+    public function breadcrumbsFor(Folder $folder): array
+    {
+        $trail = [];
+        $current = $folder;
+
+        while ($current !== null) {
+            array_unshift($trail, [
+                'id' => $current->id,
+                'name' => $current->name,
+            ]);
+            $current = $current->parent;
+        }
+
+        array_unshift($trail, [
+            'id' => null,
+            'name' => 'Root',
+        ]);
+
+        return $trail;
+    }
+
+    /**
      * @return list<array{id: int|null, name: string}>
      */
     private function ancestors(Folder $folder): array
     {
-        $crumbs = [
-            ['id' => null, 'name' => 'Root'],
-        ];
-        $current = $folder->parent;
-
-        while ($current !== null) {
-            $crumbs[] = [
-                'id' => $current->id,
-                'name' => $current->name,
-            ];
-            $current = $current->parent;
-        }
-
-        $crumbs[] = [
-            'id' => $folder->id,
-            'name' => $folder->name,
-        ];
-
-        return $crumbs;
+        return $this->breadcrumbsFor($folder);
     }
 
     private function log(User $user, string $action, Folder $folder, string $description): void

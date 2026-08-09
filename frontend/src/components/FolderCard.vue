@@ -19,10 +19,6 @@ const props = defineProps({
     type: String,
     default: 'folder', // folder | file
   },
-  toneIndex: {
-    type: Number,
-    default: 0,
-  },
 })
 
 const emit = defineEmits(['rename', 'delete'])
@@ -31,15 +27,6 @@ const auth = useAuthStore()
 const router = useRouter()
 const menuOpen = ref(false)
 
-const tones = [
-  'bg-slate-100 text-slate-600',
-  'bg-sky-100 text-sky-700',
-  'bg-[var(--brand-soft)] text-[var(--brand-strong)]',
-  'bg-violet-100 text-violet-700',
-  'bg-lime-100 text-lime-700',
-]
-
-const toneClass = computed(() => tones[props.toneIndex % tones.length])
 const isFolder = computed(() => props.kind === 'folder')
 const title = computed(() => (isFolder.value ? props.item.name : props.item.title))
 const subtitle = computed(() => {
@@ -120,7 +107,7 @@ function onDelete() {
       </motion.div>
     </AnimatePresence>
 
-    <div class="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl" :class="toneClass">
+    <div class="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--brand-soft)] text-[var(--brand-strong)]">
       <Folder v-if="isFolder" class="size-7" :stroke-width="1.75" />
       <FileText v-else class="size-7" :stroke-width="1.75" />
     </div>
